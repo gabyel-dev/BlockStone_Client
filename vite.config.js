@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://blockstone-server.onrender.com/api",
+        target: "https://blockstone-server.onrender.com",
         changeOrigin: true,
       },
     },
