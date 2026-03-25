@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FiLoader, FiPlus } from "react-icons/fi";
 import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
@@ -31,6 +31,9 @@ const PosPage = () => {
   const [isCatalogLoading, setIsCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState("");
   const [activeItemKey, setActiveItemKey] = useState("");
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const submitLockRef = useRef(false);
+  const orderRequestKeyRef = useRef("");
 
   // Loads available POS services from backend and prepares sectioned catalog state.
   useEffect(() => {
@@ -122,29 +125,52 @@ const PosPage = () => {
 
   // Validates ticket input and sets a readable status message after submit.
   const handleSubmit = async () => {
-    if (!customerName.trim()) {
-      toast.warning("Customer name is required.");
-      return;
-    }
-    if (!orderItems.length) {
-      toast.warning("Please add at least one service.");
+    if (submitLockRef.current) {
+      toast.error("Order is already being submitted. Please wait.");
       return;
     }
 
-    const normalizedItems = buildNormalizedItems(orderItems);
-
-    if (hasInvalidPriceOption(normalizedItems)) {
-      toast.error("Unable to place order. Reload services and try again.");
-      return;
-    }
+    submitLockRef.current = true;
+    setIsSubmittingOrder(true);
 
     try {
-      const response = await createTransaction({
-        paymentMethod: "Order",
-        customerName: customerName.trim(),
-        totalAmount: subtotal,
-        items: normalizedItems,
-      });
+      if (!customerName.trim()) {
+        toast.warning("Customer name is required.");
+        return;
+      }
+
+      if (!orderItems.length) {
+        toast.warning("Please add at least one service.");
+        return;
+      }
+
+      const normalizedItems = buildNormalizedItems(orderItems);
+
+      if (hasInvalidPriceOption(normalizedItems)) {
+        toast.error("Unable to place order. Reload services and try again.");
+        return;
+      }
+
+      if (!orderRequestKeyRef.current) {
+        orderRequestKeyRef.current =
+          typeof crypto?.randomUUID === "function"
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      }
+
+      const response = await createTransaction(
+        {
+          paymentMethod: "Order",
+          customerName: customerName.trim(),
+          totalAmount: subtotal,
+          items: normalizedItems,
+        },
+        {
+          headers: {
+            "X-Idempotency-Key": orderRequestKeyRef.current,
+          },
+        },
+      );
 
       const transactionId = response?.data?.data?.tid;
       setNotice(
@@ -152,6 +178,7 @@ const PosPage = () => {
       );
       setOrderItems([]);
       setCustomerName("");
+      orderRequestKeyRef.current = "";
       toast.success(`Order #${transactionId} placed successfully.`);
     } catch (error) {
       const message =
@@ -159,6 +186,9 @@ const PosPage = () => {
         "Unable to place order. Please try again.";
 
       toast.error(message);
+    } finally {
+      submitLockRef.current = false;
+      setIsSubmittingOrder(false);
     }
   };
 
@@ -259,6 +289,7 @@ const PosPage = () => {
           subtotal={subtotal}
           notice={notice}
           onSubmit={handleSubmit}
+          isSubmittingOrder={isSubmittingOrder}
         />
       </section>
     </main>

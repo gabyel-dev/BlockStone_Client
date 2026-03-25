@@ -2,8 +2,8 @@ import { api } from "./axios";
 
 export const getPrintServices = () => api.get("/print/services");
 
-export const createTransaction = (payload) =>
-  api.post("/print/transactions", payload);
+export const createTransaction = (payload, config = {}) =>
+  api.post("/print/transactions", payload, config);
 
 export const getTransactions = ({ period, page, pageSize, date }) =>
   api.get("/print/transactions", {
