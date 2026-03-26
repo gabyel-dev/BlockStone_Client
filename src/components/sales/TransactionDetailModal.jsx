@@ -23,6 +23,18 @@ const formatDateTime = (value) => {
   });
 };
 
+const formatUnit = (unitValue) => {
+  const normalized = String(unitValue ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (["page", "sheet", "session", "set", "print"].includes(normalized)) {
+    return normalized;
+  }
+
+  return normalized || "-";
+};
+
 // Isolated transaction-by-id modal so detail fetch/debugging stays in one place.
 const TransactionDetailModal = ({ transactionId, onClose }) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -105,7 +117,7 @@ const TransactionDetailModal = ({ transactionId, onClose }) => {
 
         {!isOrderLoading && selectedOrder?.transaction ? (
           <>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
                   Date
@@ -133,11 +145,21 @@ const TransactionDetailModal = ({ transactionId, onClose }) => {
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-                  Grand Total
+                  Gross Total
                 </p>
                 <p className="mt-1 text-sm font-black text-slate-900">
                   {peso.format(
                     Number(selectedOrder.transaction.total_amount ?? 0),
+                  )}
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                  Net Total
+                </p>
+                <p className="mt-1 text-sm font-black text-emerald-700">
+                  {peso.format(
+                    Number(selectedOrder.transaction.total_net_amount ?? 0),
                   )}
                 </p>
               </div>
@@ -150,8 +172,10 @@ const TransactionDetailModal = ({ transactionId, onClose }) => {
                     <th className="px-2 py-1">Service</th>
                     <th className="px-2 py-1">Category</th>
                     <th className="px-2 py-1">Option</th>
+                    <th className="px-2 py-1 text-right">Price</th>
                     <th className="px-2 py-1 text-right">Unit</th>
                     <th className="px-2 py-1 text-right">Qty</th>
+                    <th className="px-2 py-1 text-right">Net</th>
                     <th className="px-2 py-1 text-right">Subtotal</th>
                   </tr>
                 </thead>
@@ -169,8 +193,14 @@ const TransactionDetailModal = ({ transactionId, onClose }) => {
                       <td className="px-2 py-2.5 text-right">
                         {peso.format(Number(item.price ?? 0))}
                       </td>
+                      <td className="px-2 py-2.5 text-right font-semibold text-slate-700">
+                        {formatUnit(item.unit)}
+                      </td>
                       <td className="px-2 py-2.5 text-right">
                         {item.quantity}
+                      </td>
+                      <td className="px-2 py-2.5 text-right font-semibold text-emerald-700">
+                        {peso.format(Number(item.net_amount ?? 0))}
                       </td>
                       <td className="rounded-r-lg px-2 py-2.5 text-right font-black text-slate-900">
                         {peso.format(Number(item.subtotal ?? 0))}
