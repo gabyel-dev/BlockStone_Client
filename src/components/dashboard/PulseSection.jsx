@@ -1,4 +1,4 @@
-import { FiMoreVertical, FiShoppingCart, FiTarget } from "react-icons/fi";
+import { FiShoppingCart } from "react-icons/fi";
 import { LuPhilippinePeso } from "react-icons/lu";
 
 const peso = new Intl.NumberFormat("en-PH", {
@@ -19,6 +19,23 @@ const PulseSection = ({ summary, period = "weekly" }) => {
   const periodLabel = periodLabels[period] ?? "Selected Range";
   const rangeOrders = Number(safeSummary.totalOrders ?? 0);
   const rangePlacedOrders = Number(safeSummary.placedOrders ?? 0);
+  const netIncome = Number(safeSummary.netIncome ?? 0);
+  const netIncomeChangePct = Number(safeSummary.netIncomeChangePct ?? 0);
+  const netIncomeTrendDirection = safeSummary.netIncomeTrendDirection ?? "flat";
+  const netIncomeComparisonLabel =
+    safeSummary.netIncomeComparisonLabel ?? "vs previous period";
+
+  const netIncomeTrendText =
+    netIncomeTrendDirection === "flat"
+      ? `No change ${netIncomeComparisonLabel}`
+      : `${netIncomeTrendDirection === "up" ? "Up" : "Down"} by ${netIncomeChangePct > 0 ? "+" : ""}${netIncomeChangePct.toFixed(1)}% ${netIncomeComparisonLabel}`;
+
+  const netIncomeTrendClass =
+    netIncomeTrendDirection === "up"
+      ? "text-emerald-600"
+      : netIncomeTrendDirection === "down"
+        ? "text-rose-600"
+        : "text-slate-500";
 
   // Card list is kept simple so values and labels are easy to edit later.
   const stats = [
@@ -31,19 +48,19 @@ const PulseSection = ({ summary, period = "weekly" }) => {
       subClass: "text-emerald-600",
     },
     {
-      label: periodLabel,
-      value: `${rangeOrders}`,
-      subtext: "Orders in selected range",
-      icon: FiShoppingCart,
-      iconClass: "text-indigo-500",
-      subClass: "text-slate-500",
+      label: "Net Income",
+      value: peso.format(netIncome),
+      subtext: netIncomeTrendText,
+      icon: LuPhilippinePeso,
+      iconClass: "text-emerald-500",
+      subClass: netIncomeTrendClass,
     },
     {
-      label: "Rating",
+      label: periodLabel,
       value: `${rangePlacedOrders}`,
-      subtext: "Average service rating",
-      icon: FiTarget,
-      iconClass: "text-rose-500",
+      subtext: `${rangeOrders} orders in selected range`,
+      icon: FiShoppingCart,
+      iconClass: "text-indigo-500",
       subClass: "text-slate-500",
     },
   ];

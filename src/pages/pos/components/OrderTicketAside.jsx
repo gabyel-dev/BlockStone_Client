@@ -15,7 +15,6 @@ const OrderTicketAside = ({
   subtotal,
   notice,
   onSubmit,
-  isSubmittingOrder,
 }) => {
   return (
     <aside className="rounded-2xl border border-slate-200 bg-linear-to-b from-white to-slate-50 p-3.5 sm:rounded-[28px] sm:p-5 xl:col-span-5">
@@ -141,15 +140,9 @@ const OrderTicketAside = ({
         <div>
           <button
             onClick={onSubmit}
-            disabled={isSubmittingOrder}
-            className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition sm:py-3 ${
-              isSubmittingOrder
-                ? "cursor-not-allowed bg-slate-500"
-                : "bg-slate-900 hover:bg-slate-700"
-            }`}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700 sm:py-3"
           >
-            <FiCheckCircle size={16} />
-            {isSubmittingOrder ? "Processing order..." : "Place Order"}
+            <FiCheckCircle size={16} /> Place Order
           </button>
         </div>
 
