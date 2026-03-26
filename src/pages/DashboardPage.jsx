@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { getDashboard } from "../api/auth";
+import CategoryIncomeChartCard from "../components/dashboard/CategoryIncomeChartCard";
 import DashboardHeader from "../components/dashboard/DashboardHeader";
-import OrderFlowChartCard from "../components/dashboard/OrderFlowChartCard";
 import PulseSection from "../components/dashboard/PulseSection";
 import QuickActionsCard from "../components/dashboard/QuickActionsCard";
 import RevenueMixCard from "../components/dashboard/RevenueMixCard";
@@ -22,7 +22,6 @@ const DashboardPage = () => {
   );
   const [summary, setSummary] = useState({});
   const [throughput, setThroughput] = useState([]);
-  const [orderFlowTrend, setOrderFlowTrend] = useState([]);
   const [revenueMix, setRevenueMix] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -67,7 +66,6 @@ const DashboardPage = () => {
 
         setSummary(payload.summary ?? {});
         setThroughput(payload.throughput ?? []);
-        setOrderFlowTrend(payload.orderFlow ?? []);
         setRevenueMix(payload.revenueMix ?? []);
       } catch {
         if (!isMounted) {
@@ -76,7 +74,6 @@ const DashboardPage = () => {
 
         setSummary({});
         setThroughput([]);
-        setOrderFlowTrend([]);
         setRevenueMix([]);
       } finally {
         if (isMounted && !silent) {
@@ -127,7 +124,7 @@ const DashboardPage = () => {
       </section>
 
       <section className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 xl:grid-cols-12">
-        <OrderFlowChartCard orderFlow={orderFlowTrend} />
+        <CategoryIncomeChartCard mixData={revenueMix} />
         <StockRadarCard stockRadar={stockRadar} />
       </section>
 
