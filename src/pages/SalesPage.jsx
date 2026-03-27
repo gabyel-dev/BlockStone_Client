@@ -12,85 +12,14 @@ import { toast } from "sonner";
 import { useLocation } from "react-router-dom";
 import { getTransactions } from "../api/print";
 import TransactionDetailModal from "../components/sales/TransactionDetailModal";
-
-const periods = [
-  { key: "daily", label: "Daily" },
-  { key: "weekly", label: "Weekly" },
-  { key: "monthly", label: "Monthly" },
-  { key: "yearly", label: "Yearly" },
-];
-
-const peso = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-  minimumFractionDigits: 2,
-});
-
-const formatDateTime = (value) => {
-  if (!value) {
-    return "-";
-  }
-
-  return new Date(value).toLocaleString("en-PH", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
-const getSafeDate = (value) => {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return new Date();
-  }
-
-  return parsed;
-};
-
-const toIsoDate = (date) => {
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 10);
-};
-
-const getIsoWeekValue = (value) => {
-  const sourceDate = getSafeDate(value);
-  const utcDate = new Date(
-    Date.UTC(
-      sourceDate.getFullYear(),
-      sourceDate.getMonth(),
-      sourceDate.getDate(),
-    ),
-  );
-  const dayNum = utcDate.getUTCDay() || 7;
-
-  utcDate.setUTCDate(utcDate.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil(((utcDate - yearStart) / 86400000 + 1) / 7);
-
-  return `${utcDate.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
-};
-
-const isoWeekToDate = (weekValue) => {
-  const [yearPart, weekPart] = String(weekValue || "").split("-W");
-  const year = Number(yearPart);
-  const week = Number(weekPart);
-
-  if (!year || !week) {
-    return toIsoDate(new Date());
-  }
-
-  const simple = new Date(Date.UTC(year, 0, 1 + (week - 1) * 7));
-  const day = simple.getUTCDay() || 7;
-  const monday = new Date(simple);
-  monday.setUTCDate(simple.getUTCDate() - day + 1);
-
-  return monday.toISOString().slice(0, 10);
-};
-
-const getMonthValue = (value) => toIsoDate(getSafeDate(value)).slice(0, 7);
+import { periods, peso } from "./sales/constants";
+import {
+  formatDateTime,
+  getIsoWeekValue,
+  getMonthValue,
+  isoWeekToDate,
+} from "./sales/utils/dateFilters";
+import { calculateSalesTotals } from "./sales/utils/metrics";
 
 const SummarySkeleton = () => (
   <section className="grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4">
@@ -148,6 +77,8 @@ const SalesPage = () => {
 
   const lastSeenTransactionId = useRef(null);
 
+  // STEP 1: Build one request function that always sends period/date/page filters.
+  // The backend receives those filters and returns only the matching date window.
   const fetchSales = useCallback(
     async ({ silent = false } = {}) => {
       if (!silent) {
@@ -159,6 +90,7 @@ const SalesPage = () => {
           setError("");
         }
 
+        // STEP 2: Send filtered request (period + specific date + pagination).
         const response = await getTransactions({
           period,
           page,
@@ -168,6 +100,7 @@ const SalesPage = () => {
         const transactions = response?.data?.data?.transactions ?? [];
         const responseMeta = response?.data?.data?.meta;
 
+        // STEP 3: Persist latest result set in state for rendering and metric math.
         setSales(transactions);
         setMeta(
           responseMeta ?? {
@@ -179,6 +112,7 @@ const SalesPage = () => {
           },
         );
 
+        // STEP 4: In silent polling mode, compare latest transaction id to detect new orders.
         const latestTid = transactions[0]?.tid;
         if (
           latestTid &&
@@ -204,10 +138,12 @@ const SalesPage = () => {
   );
 
   useEffect(() => {
+    // STEP 5: First load or any filter change triggers a full fetch.
     fetchSales();
   }, [fetchSales]);
 
   useEffect(() => {
+    // STEP 6: Poll every 10s to keep sales feed near real-time.
     const timer = setInterval(() => {
       fetchSales({ silent: true });
     }, 10000);
@@ -217,35 +153,24 @@ const SalesPage = () => {
     };
   }, [fetchSales]);
 
-  const totals = useMemo(() => {
-    const gross = sales.reduce(
-      (sum, transaction) => sum + Number(transaction.total_amount ?? 0),
-      0,
-    );
-    const orders = sales.length;
-    const items = sales.reduce(
-      (sum, transaction) => sum + Number(transaction.total_qty ?? 0),
-      0,
-    );
-
-    return {
-      gross,
-      orders,
-      items,
-      avg: orders ? gross / orders : 0,
-    };
-  }, [sales]);
+  // STEP 7: Compute review metrics from currently visible rows.
+  // gross: sum(total_amount)
+  // netIncome: sum(net_amount) when backend provides it, else fallback to gross
+  // avg: gross / number of orders
+  const totals = useMemo(() => calculateSalesTotals(sales), [sales]);
 
   const handleChangePeriod = (nextPeriod) => {
     setPeriod(nextPeriod);
     setPage(1);
   };
 
+  // STEP 8: Weekly picker returns YYYY-Wnn; convert to ISO Monday date for API.
   const handleWeekInput = (event) => {
     setReferenceDate(isoWeekToDate(event.target.value));
     setPage(1);
   };
 
+  // STEP 9: Monthly picker is normalized to first day of selected month.
   const handleMonthInput = (event) => {
     const monthValue = event.target.value;
     if (!monthValue) {
@@ -474,6 +399,11 @@ const SalesPage = () => {
             </div>
 
             {renderTimelineControl()}
+
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+              Gross {peso.format(totals.gross)} | Net{" "}
+              {peso.format(totals.netIncome)}
+            </p>
           </div>
 
           {error ? (
@@ -547,7 +477,6 @@ const SalesPage = () => {
                   <th className="px-3 py-2">Date</th>
                   <th className="px-3 py-2">Cashier</th>
                   <th className="px-3 py-2">Items</th>
-                  <th className="px-3 py-2">Mode</th>
                   <th className="px-3 py-2 text-right">Total</th>
                   <th className="px-3 py-2 text-right">Action</th>
                 </tr>
@@ -588,11 +517,7 @@ const SalesPage = () => {
                       {transaction.total_qty || 0} pcs (
                       {transaction.item_count || 0} lines)
                     </td>
-                    <td className="px-3 py-3">
-                      <span className="rounded-full bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                        {transaction.payment_method || "cash"}
-                      </span>
-                    </td>
+
                     <td className="px-3 py-3 text-right font-black text-slate-900">
                       {peso.format(Number(transaction.total_amount ?? 0))}
                     </td>

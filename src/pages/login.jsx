@@ -1,48 +1,11 @@
-import { useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { FiAlertTriangle, FiLock, FiLogIn, FiUser } from "react-icons/fi";
-import { loginUser } from "../api/auth";
+import { useLoginForm } from "./login/hooks/useLoginForm";
 
 const Login = () => {
-  const [form, setForm] = useState({ username: "", password: "" });
-
-  const [status, setStatus] = useState({ loading: false, server: "" });
+  const { form, status, canSubmit, onChange, submit } = useLoginForm();
   const shouldReduceMotion = useReducedMotion();
   const motionSafe = (props) => (shouldReduceMotion ? {} : props);
-
-  const canSubmit = useMemo(() => {
-    return (
-      form.username.trim().length > 0 &&
-      form.password.trim().length > 0 &&
-      !status.loading
-    );
-  }, [form, status.loading]);
-
-  const onChange = (event) => {
-    const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const submit = async (event) => {
-    event.preventDefault();
-    setStatus({ loading: true, server: "" });
-
-    try {
-      await loginUser({
-        username: form.username.trim(),
-        password: form.password,
-      });
-      window.dispatchEvent(new Event("auth:changed"));
-      setForm({ username: "", password: "" });
-
-      setStatus({ loading: false, server: "" });
-    } catch (error) {
-      setStatus({
-        loading: false,
-        server: error?.response?.data?.message || "Unable to login",
-      });
-    }
-  };
 
   return (
     <motion.main

@@ -117,7 +117,7 @@ const TransactionDetailModal = ({ transactionId, onClose }) => {
 
         {!isOrderLoading && selectedOrder?.transaction ? (
           <>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
                   Date
@@ -135,14 +135,7 @@ const TransactionDetailModal = ({ transactionId, onClose }) => {
                   {selectedOrder.transaction.last_name || ""}
                 </p>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-                  Mode
-                </p>
-                <p className="mt-1 text-sm font-semibold uppercase text-slate-800">
-                  {selectedOrder.transaction.payment_method || "cash"}
-                </p>
-              </div>
+
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
                   Gross Total

@@ -6,7 +6,7 @@ export const api = axios.create({
     "Content-Type": "application/json",
   },
   withCredentials: true,
-  timeout: 20_000, // 20 s — prevents requests from hanging indefinitely
+  timeout: 30_000, // 30 s — prevents requests from hanging indefinitely
 });
 
 let isRefreshing = false;

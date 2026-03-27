@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   FiLoader,
@@ -9,133 +9,25 @@ import {
   FiUsers,
 } from "react-icons/fi";
 import { useLocation } from "react-router-dom";
-import { getUsers } from "../api/auth";
-
-const USERS_CACHE_KEY = "users-management-cache-v1";
-
-const readUsersCache = () => {
-  if (typeof window === "undefined") return [];
-
-  try {
-    const raw = window.localStorage.getItem(USERS_CACHE_KEY);
-    if (!raw) return [];
-
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed?.users) ? parsed.users : [];
-  } catch {
-    return [];
-  }
-};
-
-const writeUsersCache = (users) => {
-  if (typeof window === "undefined") return;
-
-  try {
-    window.localStorage.setItem(
-      USERS_CACHE_KEY,
-      JSON.stringify({
-        users,
-        cachedAt: Date.now(),
-      }),
-    );
-  } catch {
-    // Keep UI functional when localStorage is unavailable.
-  }
-};
+import { useUsersData } from "./users-management/hooks/useUsersData";
+import { buildUserStats, filterUsers } from "./users-management/utils/metrics";
 
 const UsersManagementPage = () => {
   const location = useLocation();
   const activeMenu = location.state?.menu || "Users Management";
 
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { users, loading, error } = useUsersData();
   const [roleFilter, setRoleFilter] = useState("all");
   const [searchText, setSearchText] = useState("");
   const shouldReduceMotion = useReducedMotion();
   const motionSafe = (props) => (shouldReduceMotion ? {} : props);
 
-  useEffect(() => {
-    const cachedUsers = readUsersCache();
-    if (cachedUsers.length > 0) {
-      setUsers(cachedUsers);
-      setLoading(false);
-      return;
-    }
-
-    let isMounted = true;
-
-    const loadUsers = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const response = await getUsers();
-        const userList = response?.data?.data ?? [];
-
-        if (isMounted) {
-          setUsers(userList);
-          writeUsersCache(userList);
-        }
-      } catch {
-        if (isMounted) {
-          setError("Unable to load users. Please refresh and try again.");
-          setUsers([]);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadUsers();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
   const stats = useMemo(() => {
-    const admins = users.filter(
-      (entry) => String(entry?.role || "").toLowerCase() === "admin",
-    ).length;
-    const regularUsers = users.filter(
-      (entry) => String(entry?.role || "").toLowerCase() !== "admin",
-    ).length;
-
-    return {
-      total: users.length,
-      admins,
-      users: regularUsers,
-    };
+    return buildUserStats(users);
   }, [users]);
 
   const filteredUsers = useMemo(() => {
-    const query = searchText.trim().toLowerCase();
-
-    return users.filter((entry) => {
-      const role = String(entry?.role || "").toLowerCase();
-      const isAdmin = role === "admin";
-      const roleMatches =
-        roleFilter === "all" ||
-        (roleFilter === "admin" && isAdmin) ||
-        (roleFilter === "user" && !isAdmin);
-
-      const fullName = `${entry?.first_name || ""} ${entry?.last_name || ""}`
-        .trim()
-        .toLowerCase();
-      const username = String(entry?.username || "").toLowerCase();
-      const email = String(entry?.email || "").toLowerCase();
-
-      const searchMatches =
-        query.length === 0 ||
-        fullName.includes(query) ||
-        username.includes(query) ||
-        email.includes(query);
-
-      return roleMatches && searchMatches;
-    });
+    return filterUsers({ users, roleFilter, searchText });
   }, [users, roleFilter, searchText]);
 
   return (
