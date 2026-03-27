@@ -27,8 +27,6 @@ const RegisterPage = () => {
     server: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const shouldReduceMotion = useReducedMotion();
-  const motionSafe = (props) => (shouldReduceMotion ? {} : props);
 
   const canSubmit = useMemo(() => {
     const requiredValues = [
@@ -88,18 +86,12 @@ const RegisterPage = () => {
   };
 
   return (
-    <motion.main
-      className="relative min-h-screen overflow-hidden bg-linear-to-b from-slate-50 via-white to-sky-50 px-3 py-8 text-slate-900 sm:px-6 sm:py-10"
-      {...motionSafe({ initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 } })}
-    >
+    <main className="relative min-h-screen overflow-hidden bg-linear-to-b from-slate-50 via-white to-sky-50 px-3 py-8 text-slate-900 sm:px-6 sm:py-10">
       <div className="pointer-events-none absolute -right-28 -top-28 h-72 w-72 rounded-full bg-sky-200/55 blur-3xl sm:h-80 sm:w-80" />
       <div className="pointer-events-none absolute -bottom-28 -left-28 h-72 w-72 rounded-full bg-indigo-200/45 blur-3xl sm:h-80 sm:w-80" />
 
       <section className="relative mx-auto grid w-full max-w-5xl gap-4 rounded-3xl border border-slate-200/80 bg-white/90 p-4 shadow-[0_18px_45px_-35px_rgba(15,23,42,0.45)] backdrop-blur sm:gap-6 sm:p-6 lg:grid-cols-[1.05fr_1.2fr] lg:rounded-4xl">
-        <motion.aside
-          className="relative hidden overflow-hidden rounded-3xl bg-linear-to-br from-slate-100 via-white to-slate-50 p-7 lg:flex lg:flex-col lg:justify-between"
-          {...motionSafe({ initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.05 } })}
-        >
+        <aside className="relative hidden overflow-hidden rounded-3xl bg-linear-to-br from-slate-100 via-white to-slate-50 p-7 lg:flex lg:flex-col lg:justify-between">
           <img
             src="/logo.png"
             alt="logo"
@@ -150,11 +142,8 @@ const RegisterPage = () => {
           onSubmit={onSubmit}
           className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_35px_-30px_rgba(15,23,42,0.35)] sm:p-6"
         >
-          <div className="mt-6 space-y-3">
-            <motion.div
-              {...motionSafe({ initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.12 } })}
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_12px_30px_-22px_rgba(15,23,42,0.35)]"
-            >
+          <header className="mb-5 space-y-1">
+            <div className="flex items-center gap-2">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white">
                 <FiUserPlus />
               </span>
@@ -162,11 +151,8 @@ const RegisterPage = () => {
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
                   New account
                 </p>
-            </motion.div>
-            <motion.div
-              {...motionSafe({ initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.18 } })}
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_12px_30px_-22px_rgba(15,23,42,0.35)]"
-            >
+                <h2 className="text-xl font-black text-slate-900 sm:text-2xl">
+                  Register to continue
                 </h2>
               </div>
             </div>
@@ -174,15 +160,14 @@ const RegisterPage = () => {
               Fill in your details. We will not share your email with anyone.
             </p>
           </header>
-            </motion.div>
+
           <div className="grid gap-4 sm:grid-cols-2">
-        </motion.aside>
+            <label className="space-y-1.5 text-sm">
               <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-        <motion.form
-          onSubmit={onSubmit}
-          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_35px_-30px_rgba(15,23,42,0.35)] sm:p-6"
-          {...motionSafe({ initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.08 } })}
-        >
+                First name
+              </span>
+              <div className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2.5 focus-within:border-slate-900">
+                <FiUser className="text-slate-500" />
                 <input
                   name="first_name"
                   type="text"
@@ -298,17 +283,16 @@ const RegisterPage = () => {
             </p>
           ) : null}
 
-          <motion.button
+          <button
             type="submit"
             disabled={!canSubmit}
-            {...motionSafe({ whileHover: { y: -1, scale: 1.01 }, whileTap: { scale: 0.98 } })}
             className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {status.loading ? "Creating account..." : "Create account"}
-          </motion.button>
-        </motion.form>
+          </button>
+        </form>
       </section>
-    </motion.main>
+    </main>
   );
 };
 

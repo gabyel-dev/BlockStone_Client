@@ -474,10 +474,6 @@ const SalesPage = () => {
             </div>
 
             {renderTimelineControl()}
-
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-              {meta.total} records in {meta.period}
-            </p>
           </div>
 
           {error ? (
