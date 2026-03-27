@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   FiLoader,
   FiMail,
@@ -51,6 +52,8 @@ const UsersManagementPage = () => {
   const [error, setError] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [searchText, setSearchText] = useState("");
+  const shouldReduceMotion = useReducedMotion();
+  const motionSafe = (props) => (shouldReduceMotion ? {} : props);
 
   useEffect(() => {
     const cachedUsers = readUsersCache();
@@ -136,8 +139,14 @@ const UsersManagementPage = () => {
   }, [users, roleFilter, searchText]);
 
   return (
-    <main className="w-full py-7 text-slate-900">
-      <header className="mb-8 flex flex-wrap items-center justify-between gap-3">
+    <motion.main
+      className="w-full py-7 text-slate-900 pr-6 pl-6 md:pl-0"
+      {...motionSafe({
+        initial: { opacity: 0, y: 8 },
+        animate: { opacity: 1, y: 0 },
+      })}
+    >
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.22em] text-slate-400">
             {activeMenu}
@@ -146,17 +155,20 @@ const UsersManagementPage = () => {
             User Access Control
           </h1>
         </div>
-
-        <div className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-          {loading ? "Loading Users" : `${filteredUsers.length} visible users`}
-        </div>
       </header>
 
       <section className="grid gap-6 xl:grid-cols-12">
-        <div className="relative overflow-hidden rounded-[30px] border border-slate-200 bg-linear-to-br from-slate-50 via-white to-sky-50 p-6 xl:col-span-8">
-          <div className="absolute -right-14 -top-16 h-52 w-52 rounded-full bg-sky-200/45 blur-3xl" />
+        <motion.div
+          className="relative overflow-hidden rounded-[30px] border border-slate-200 bg-linear-to-br from-slate-50 via-white to-sky-50 p-6 xl:col-span-8"
+          {...motionSafe({
+            initial: { opacity: 0, y: 10 },
+            animate: { opacity: 1, y: 0 },
+            transition: { delay: 0.05 },
+          })}
+        >
+          <div className="absolute hidden md:block -right-14 -top-16 h-52 w-52 rounded-full bg-sky-200/45 blur-3xl" />
 
-          <div className="relative">
+          <div className="relative ">
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.24em] text-slate-500">
               Team Overview
             </p>
@@ -165,35 +177,63 @@ const UsersManagementPage = () => {
             </h2>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
+              <motion.div
+                {...motionSafe({
+                  initial: { opacity: 0, y: 6 },
+                  animate: { opacity: 1, y: 0 },
+                  transition: { delay: 0.1 },
+                })}
+                className="rounded-2xl border border-slate-200 bg-white/80 p-4"
+              >
                 <p className="text-xs uppercase tracking-[0.16em] text-slate-400">
                   Total
                 </p>
                 <p className="mt-2 text-2xl font-black text-slate-900">
                   {stats.total}
                 </p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
+              </motion.div>
+              <motion.div
+                {...motionSafe({
+                  initial: { opacity: 0, y: 6 },
+                  animate: { opacity: 1, y: 0 },
+                  transition: { delay: 0.15 },
+                })}
+                className="rounded-2xl border border-slate-200 bg-white/80 p-4"
+              >
                 <p className="text-xs uppercase tracking-[0.16em] text-slate-400">
                   Admins
                 </p>
                 <p className="mt-2 text-2xl font-black text-indigo-700">
                   {stats.admins}
                 </p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
+              </motion.div>
+              <motion.div
+                {...motionSafe({
+                  initial: { opacity: 0, y: 6 },
+                  animate: { opacity: 1, y: 0 },
+                  transition: { delay: 0.2 },
+                })}
+                className="rounded-2xl border border-slate-200 bg-white/80 p-4"
+              >
                 <p className="text-xs uppercase tracking-[0.16em] text-slate-400">
                   Users
                 </p>
                 <p className="mt-2 text-2xl font-black text-emerald-700">
                   {stats.users}
                 </p>
-              </div>
+              </motion.div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        <aside className="rounded-[30px] border border-slate-200 bg-white p-6 xl:col-span-4">
+        <motion.aside
+          className="rounded-[30px] border border-slate-200 bg-white p-6 xl:col-span-4"
+          {...motionSafe({
+            initial: { opacity: 0, y: 10 },
+            animate: { opacity: 1, y: 0 },
+            transition: { delay: 0.1 },
+          })}
+        >
           <h3 className="text-lg font-black text-slate-900">Filters</h3>
 
           <div className="mt-5 space-y-4">
@@ -240,7 +280,7 @@ const UsersManagementPage = () => {
               </button>
             </div>
           </div>
-        </aside>
+        </motion.aside>
       </section>
 
       <section className="mt-6 rounded-[30px] border border-slate-200 bg-white p-6">
@@ -276,8 +316,12 @@ const UsersManagementPage = () => {
                   String(entry?.role || "").toLowerCase() === "admin";
 
                 return (
-                  <div
+                  <motion.div
                     key={entry.id}
+                    {...motionSafe({
+                      initial: { opacity: 0, y: 6 },
+                      animate: { opacity: 1, y: 0 },
+                    })}
                     className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
                   >
                     <div className="flex min-w-0 items-center gap-3">
@@ -313,7 +357,7 @@ const UsersManagementPage = () => {
                         {isAdmin ? "Admin" : "User"}
                       </span>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })
             )}
@@ -334,7 +378,7 @@ const UsersManagementPage = () => {
           </div>
         </div>
       </section>
-    </main>
+    </motion.main>
   );
 };
 

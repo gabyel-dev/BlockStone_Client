@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { FiAlertTriangle, FiLock, FiLogIn, FiUser } from "react-icons/fi";
 import { loginUser } from "../api/auth";
 
@@ -6,6 +7,8 @@ const Login = () => {
   const [form, setForm] = useState({ username: "", password: "" });
 
   const [status, setStatus] = useState({ loading: false, server: "" });
+  const shouldReduceMotion = useReducedMotion();
+  const motionSafe = (props) => (shouldReduceMotion ? {} : props);
 
   const canSubmit = useMemo(() => {
     return (
@@ -42,12 +45,25 @@ const Login = () => {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-linear-to-b from-slate-50 via-white to-sky-50 px-3 py-5 text-slate-900 sm:px-4 sm:py-8">
+    <motion.main
+      className="relative min-h-screen overflow-hidden bg-linear-to-b from-slate-50 via-white to-sky-50 px-3 py-5 text-slate-900 sm:px-4 sm:py-8"
+      {...motionSafe({
+        initial: { opacity: 0, y: 8 },
+        animate: { opacity: 1, y: 0 },
+      })}
+    >
       <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-sky-200/55 blur-3xl sm:h-72 sm:w-72" />
       <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-indigo-200/45 blur-3xl sm:h-72 sm:w-72" />
 
       <section className="relative mx-auto grid w-full max-w-5xl gap-4 rounded-3xl border border-slate-200/80 bg-white/90 p-3 shadow-[0_18px_45px_-35px_rgba(15,23,42,0.45)] backdrop-blur sm:gap-6 sm:p-4 lg:grid-cols-2 lg:rounded-4xl lg:p-6">
-        <aside className="relative hidden h-full overflow-hidden rounded-3xl bg-linear-to-br from-slate-100 to-white p-7 lg:flex lg:flex-col lg:justify-between">
+        <motion.aside
+          className="relative hidden h-full overflow-hidden rounded-3xl bg-linear-to-br from-slate-100 to-white p-7 lg:flex lg:flex-col lg:justify-between"
+          {...motionSafe({
+            initial: { opacity: 0, y: 10 },
+            animate: { opacity: 1, y: 0 },
+            transition: { delay: 0.05 },
+          })}
+        >
           <img
             src="/logo.png"
             alt="logo"
@@ -76,9 +92,16 @@ const Login = () => {
               </p>
             </div>
           </div>
-        </aside>
+        </motion.aside>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:rounded-[28px] sm:p-6">
+        <motion.div
+          className="rounded-2xl border border-slate-200 bg-white p-4 sm:rounded-[28px] sm:p-6"
+          {...motionSafe({
+            initial: { opacity: 0, y: 10 },
+            animate: { opacity: 1, y: 0 },
+            transition: { delay: 0.08 },
+          })}
+        >
           <header className="mb-4 sm:mb-6">
             <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white sm:h-11 sm:w-11">
               <FiLogIn size={18} />
@@ -150,17 +173,21 @@ const Login = () => {
               </div>
             ) : null}
 
-            <button
+            <motion.button
               type="submit"
               disabled={!canSubmit}
+              {...motionSafe({
+                whileHover: { y: -1, scale: 1.01 },
+                whileTap: { scale: 0.98 },
+              })}
               className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 sm:py-3"
             >
               {status.loading ? "Signing you in..." : "Sign in"}
-            </button>
+            </motion.button>
           </form>
-        </div>
+        </motion.div>
       </section>
-    </main>
+    </motion.main>
   );
 };
 

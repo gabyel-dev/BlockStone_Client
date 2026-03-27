@@ -1,3 +1,4 @@
+import { motion, useReducedMotion } from "framer-motion";
 import { FiCheckCircle, FiMinus, FiPlus, FiTrash2 } from "react-icons/fi";
 
 // Formats currency values for consistent ticket display.
@@ -16,8 +17,17 @@ const OrderTicketAside = ({
   notice,
   onSubmit,
 }) => {
+  const shouldReduceMotion = useReducedMotion();
+  const motionSafe = (props) => (shouldReduceMotion ? {} : props);
+
   return (
-    <aside className="rounded-2xl border border-slate-200 bg-linear-to-b from-white to-slate-50 p-3.5 sm:rounded-[28px] sm:p-5 xl:col-span-5">
+    <motion.aside
+      className="rounded-2xl border border-slate-200 bg-linear-to-b from-white to-slate-50 p-3.5 sm:rounded-[28px] sm:p-5 xl:col-span-5"
+      {...motionSafe({
+        initial: { opacity: 0, y: 8 },
+        animate: { opacity: 1, y: 0 },
+      })}
+    >
       <h2 className="text-lg font-black text-slate-900 sm:text-xl">
         Order Ticket
       </h2>
@@ -46,8 +56,12 @@ const OrderTicketAside = ({
               const lineTotal = effectivePrice * entry.qty;
 
               return (
-                <div
+                <motion.div
                   key={entry.id}
+                  {...motionSafe({
+                    initial: { opacity: 0, y: 6 },
+                    animate: { opacity: 1, y: 0 },
+                  })}
                   className="rounded-xl border border-slate-200 bg-white px-2.5 py-2.5 sm:px-3 sm:py-3"
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -120,7 +134,7 @@ const OrderTicketAside = ({
                       {formatAmount(lineTotal)}
                     </p>
                   </div>
-                </div>
+                </motion.div>
               );
             })
           )}
@@ -138,12 +152,16 @@ const OrderTicketAside = ({
         </div>
 
         <div>
-          <button
+          <motion.button
             onClick={onSubmit}
+            {...motionSafe({
+              whileHover: { y: -1, scale: 1.01 },
+              whileTap: { scale: 0.98 },
+            })}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700 sm:py-3"
           >
             <FiCheckCircle size={16} /> Place Order
-          </button>
+          </motion.button>
         </div>
 
         {notice ? (
@@ -152,7 +170,7 @@ const OrderTicketAside = ({
           </p>
         ) : null}
       </div>
-    </aside>
+    </motion.aside>
   );
 };
 

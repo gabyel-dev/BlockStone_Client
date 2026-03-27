@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { FiLoader, FiPlus } from "react-icons/fi";
 import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
@@ -31,6 +32,8 @@ const PosPage = () => {
   const [isCatalogLoading, setIsCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState("");
   const [activeItemKey, setActiveItemKey] = useState("");
+  const shouldReduceMotion = useReducedMotion();
+  const motionSafe = (props) => (shouldReduceMotion ? {} : props);
 
   // Loads available POS services from backend and prepares sectioned catalog state.
   useEffect(() => {
@@ -163,7 +166,13 @@ const PosPage = () => {
   };
 
   return (
-    <main className="min-h-screen p-3 text-slate-900 sm:p-5 lg:p-8">
+    <motion.main
+      className="min-h-screen py-10 text-slate-900 pr-6 pl-6 md:pl-0"
+      {...motionSafe({
+        initial: { opacity: 0, y: 8 },
+        animate: { opacity: 1, y: 0 },
+      })}
+    >
       <header className="mb-4 flex flex-wrap items-end justify-between gap-2 sm:mb-6 sm:gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
@@ -192,9 +201,14 @@ const PosPage = () => {
             </div>
           ) : null}
 
-          {catalog.map((group) => (
-            <article
+          {catalog.map((group, groupIndex) => (
+            <motion.article
               key={group.section}
+              {...motionSafe({
+                initial: { opacity: 0, y: 10 },
+                animate: { opacity: 1, y: 0 },
+                transition: { delay: groupIndex * 0.05 },
+              })}
               className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:rounded-3xl sm:p-5"
             >
               <div className="mb-3 flex items-center justify-between sm:mb-4">
@@ -207,10 +221,17 @@ const PosPage = () => {
               </div>
 
               <div className="grid gap-2 sm:grid-cols-2">
-                {group.items.map((item) => (
-                  <button
+                {group.items.map((item, index) => (
+                  <motion.button
                     key={`${item.id}-${item.priceOptionId ?? item.name}`}
                     onClick={() => addItem(item)}
+                    {...motionSafe({
+                      initial: { opacity: 0, y: 6 },
+                      animate: { opacity: 1, y: 0 },
+                      transition: { delay: index * 0.03 },
+                      whileHover: { scale: 1.01 },
+                      whileTap: { scale: 0.98 },
+                    })}
                     className={`group flex items-center justify-between rounded-xl border px-3 py-2.5 text-left transition sm:py-3 ${
                       activeItemKey ===
                       `${item.id}-${item.priceOptionId ?? item.name}`
@@ -241,10 +262,10 @@ const PosPage = () => {
                     >
                       <FiPlus size={14} />
                     </span>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
-            </article>
+            </motion.article>
           ))}
         </div>
 
@@ -261,7 +282,7 @@ const PosPage = () => {
           onSubmit={handleSubmit}
         />
       </section>
-    </main>
+    </motion.main>
   );
 };
 

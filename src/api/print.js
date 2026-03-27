@@ -17,3 +17,8 @@ export const getTransactions = ({ period, page, pageSize, date }) =>
 
 export const getTransactionById = (transactionId) =>
   api.get(`/print/transactions/${transactionId}`);
+
+export const createShiftAgenda = (payload) =>
+  api.post("/print/shift_agenda", payload);
+
+export const getShiftAgenda = () => api.get("/print/shift-agenda");

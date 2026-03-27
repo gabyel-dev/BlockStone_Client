@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   FiAtSign,
   FiCheckCircle,
@@ -26,6 +27,8 @@ const RegisterPage = () => {
     server: "",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
+  const motionSafe = (props) => (shouldReduceMotion ? {} : props);
 
   const canSubmit = useMemo(() => {
     const requiredValues = [
@@ -85,187 +88,227 @@ const RegisterPage = () => {
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#10193f_0%,#080b19_40%,#05060f_100%)] px-4 py-10 text-slate-100 sm:px-8">
-      <section className="mx-auto w-full max-w-5xl">
-        <div className="grid gap-8 rounded-3xl border border-cyan-300/20 bg-slate-900/60 p-6 shadow-[0_0_60px_rgba(12,74,110,0.25)] backdrop-blur-md md:grid-cols-[1fr_1.1fr] md:p-10">
-          <aside className="relative overflow-hidden rounded-2xl border border-cyan-200/20 bg-gradient-to-b from-cyan-500/15 via-sky-500/10 to-blue-500/10 p-7">
-            <span className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-cyan-300/30 blur-2xl" />
-            <span className="absolute -bottom-10 -left-6 h-28 w-28 rounded-full bg-blue-400/20 blur-2xl" />
+    <motion.main
+      className="relative min-h-screen overflow-hidden bg-linear-to-b from-slate-50 via-white to-sky-50 px-3 py-8 text-slate-900 sm:px-6 sm:py-10"
+      {...motionSafe({ initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 } })}
+    >
+      <div className="pointer-events-none absolute -right-28 -top-28 h-72 w-72 rounded-full bg-sky-200/55 blur-3xl sm:h-80 sm:w-80" />
+      <div className="pointer-events-none absolute -bottom-28 -left-28 h-72 w-72 rounded-full bg-indigo-200/45 blur-3xl sm:h-80 sm:w-80" />
 
-            <div className="relative z-10 space-y-5">
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-100/30 bg-cyan-300/10 px-3 py-1 text-xs font-medium uppercase tracking-widest text-cyan-100">
-                <FiShield />
-                Secure onboarding
-              </div>
+      <section className="relative mx-auto grid w-full max-w-5xl gap-4 rounded-3xl border border-slate-200/80 bg-white/90 p-4 shadow-[0_18px_45px_-35px_rgba(15,23,42,0.45)] backdrop-blur sm:gap-6 sm:p-6 lg:grid-cols-[1.05fr_1.2fr] lg:rounded-4xl">
+        <motion.aside
+          className="relative hidden overflow-hidden rounded-3xl bg-linear-to-br from-slate-100 via-white to-slate-50 p-7 lg:flex lg:flex-col lg:justify-between"
+          {...motionSafe({ initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.05 } })}
+        >
+          <img
+            src="/logo.png"
+            alt="logo"
+            className="absolute -right-10 -top-6 scale-150 opacity-[0.04]"
+          />
 
-              <h1 className="font-[Sora] text-3xl font-semibold leading-tight text-white sm:text-4xl">
-                Create your BlockStone account
-              </h1>
+          <div className="space-y-3">
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-slate-400">
+              BlockStone Printing
+            </p>
+            <h1 className="text-3xl font-black leading-tight text-slate-900">
+              Create your workspace access
+            </h1>
+            <p className="text-sm text-slate-600">
+              Register to coordinate operators, prioritize runs, and keep the
+              production floor synced.
+            </p>
+          </div>
 
-              <p className="max-w-sm text-sm leading-relaxed text-cyan-50/80">
-                Quick, clean registration for first-time users. Your password is
-                hashed server-side and your account starts with a default user
-                role.
+          <div className="mt-6 space-y-3">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_12px_30px_-22px_rgba(15,23,42,0.35)]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                Secure by design
               </p>
-
-              <ul className="space-y-2 text-sm text-cyan-50/85">
-                <li className="flex items-center gap-2">
-                  <FiCheckCircle className="text-cyan-300" />
-                  Simple entry-level form
-                </li>
-                <li className="flex items-center gap-2">
-                  <FiCheckCircle className="text-cyan-300" />
-                  Inline field validation
-                </li>
-                <li className="flex items-center gap-2">
-                  <FiCheckCircle className="text-cyan-300" />
-                  Connected to api.post register endpoint
-                </li>
-              </ul>
+              <p className="mt-1 flex items-center gap-2 text-sm font-black text-emerald-600">
+                <FiShield /> Passwords hashed server-side
+              </p>
+              <p className="text-xs text-slate-500">
+                Session tokens rotate on refresh.
+              </p>
             </div>
-          </aside>
-
-          <form
-            onSubmit={onSubmit}
-            className="space-y-4 rounded-2xl border border-slate-700/60 bg-slate-950/70 p-6"
-          >
-            <h2 className="font-[Sora] text-xl font-semibold text-white">
-              Register
-            </h2>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="space-y-1.5">
-                <span className="text-xs font-medium uppercase tracking-wide text-slate-300">
-                  First name
-                </span>
-                <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2.5 transition focus-within:border-cyan-300/80">
-                  <FiUser className="text-cyan-300" />
-                  <input
-                    name="first_name"
-                    type="text"
-                    value={form.first_name}
-                    onChange={onFieldChange}
-                    placeholder="First name"
-                    className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 outline-none"
-                  />
-                </div>
-                {errors.first_name ? (
-                  <p className="text-xs text-rose-300">{errors.first_name}</p>
-                ) : null}
-              </label>
-
-              <label className="space-y-1.5">
-                <span className="text-xs font-medium uppercase tracking-wide text-slate-300">
-                  Last name
-                </span>
-                <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2.5 transition focus-within:border-cyan-300/80">
-                  <FiUser className="text-cyan-300" />
-                  <input
-                    name="last_name"
-                    type="text"
-                    value={form.last_name}
-                    onChange={onFieldChange}
-                    placeholder="Last name"
-                    className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 outline-none"
-                  />
-                </div>
-                {errors.last_name ? (
-                  <p className="text-xs text-rose-300">{errors.last_name}</p>
-                ) : null}
-              </label>
-
-              <label className="space-y-1.5">
-                <span className="text-xs font-medium uppercase tracking-wide text-slate-300">
-                  Username
-                </span>
-                <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2.5 transition focus-within:border-cyan-300/80">
-                  <FiUserPlus className="text-cyan-300" />
-                  <input
-                    name="username"
-                    type="text"
-                    value={form.username}
-                    onChange={onFieldChange}
-                    placeholder="Username"
-                    className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 outline-none"
-                  />
-                </div>
-                {errors.username ? (
-                  <p className="text-xs text-rose-300">{errors.username}</p>
-                ) : null}
-              </label>
-
-              <label className="space-y-1.5">
-                <span className="text-xs font-medium uppercase tracking-wide text-slate-300">
-                  Email
-                </span>
-                <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2.5 transition focus-within:border-cyan-300/80">
-                  <FiAtSign className="text-cyan-300" />
-                  <input
-                    name="email"
-                    type="email"
-                    value={form.email}
-                    onChange={onFieldChange}
-                    placeholder="Email"
-                    className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 outline-none"
-                  />
-                </div>
-                {errors.email ? (
-                  <p className="text-xs text-rose-300">{errors.email}</p>
-                ) : null}
-              </label>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_12px_30px_-22px_rgba(15,23,42,0.35)]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                Ready for roles
+              </p>
+              <p className="mt-1 flex items-center gap-2 text-sm font-black text-slate-800">
+                <FiCheckCircle className="text-emerald-500" /> Default user role
+                on sign-up
+              </p>
+              <p className="text-xs text-slate-500">
+                Admins can upgrade later.
+              </p>
             </div>
+          </div>
+        </aside>
 
-            <label className="space-y-1.5">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-300">
-                Password
+        <form
+          onSubmit={onSubmit}
+          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_35px_-30px_rgba(15,23,42,0.35)] sm:p-6"
+        >
+          <div className="mt-6 space-y-3">
+            <motion.div
+              {...motionSafe({ initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.12 } })}
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_12px_30px_-22px_rgba(15,23,42,0.35)]"
+            >
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white">
+                <FiUserPlus />
               </span>
-              <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2.5 transition focus-within:border-cyan-300/80">
-                <FiLock className="text-cyan-300" />
-                <input
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  value={form.password}
-                  onChange={onFieldChange}
-                  placeholder="Minimum 8 characters"
-                  className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="text-slate-300 transition hover:text-cyan-200"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <FiEyeOff /> : <FiEye />}
-                </button>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                  New account
+                </p>
+            </motion.div>
+            <motion.div
+              {...motionSafe({ initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.18 } })}
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_12px_30px_-22px_rgba(15,23,42,0.35)]"
+            >
+                </h2>
               </div>
-              {errors.password ? (
-                <p className="text-xs text-rose-300">{errors.password}</p>
+            </div>
+            <p className="text-xs text-slate-500 sm:text-sm">
+              Fill in your details. We will not share your email with anyone.
+            </p>
+          </header>
+            </motion.div>
+          <div className="grid gap-4 sm:grid-cols-2">
+        </motion.aside>
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+        <motion.form
+          onSubmit={onSubmit}
+          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_35px_-30px_rgba(15,23,42,0.35)] sm:p-6"
+          {...motionSafe({ initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.08 } })}
+        >
+                <input
+                  name="first_name"
+                  type="text"
+                  value={form.first_name}
+                  onChange={onFieldChange}
+                  placeholder="First name"
+                  className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none"
+                />
+              </div>
+              {errors.first_name ? (
+                <p className="text-xs text-rose-600">{errors.first_name}</p>
               ) : null}
             </label>
 
-            {status.server ? (
-              <p className="rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">
-                {status.server}
-              </p>
-            ) : null}
+            <label className="space-y-1.5 text-sm">
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+                Last name
+              </span>
+              <div className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2.5 focus-within:border-slate-900">
+                <FiUser className="text-slate-500" />
+                <input
+                  name="last_name"
+                  type="text"
+                  value={form.last_name}
+                  onChange={onFieldChange}
+                  placeholder="Last name"
+                  className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none"
+                />
+              </div>
+              {errors.last_name ? (
+                <p className="text-xs text-rose-600">{errors.last_name}</p>
+              ) : null}
+            </label>
 
-            {status.success ? (
-              <p className="rounded-lg border border-emerald-300/30 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-200">
-                {status.success}
-              </p>
-            ) : null}
+            <label className="space-y-1.5 text-sm">
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+                Username
+              </span>
+              <div className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2.5 focus-within:border-slate-900">
+                <FiUserPlus className="text-slate-500" />
+                <input
+                  name="username"
+                  type="text"
+                  value={form.username}
+                  onChange={onFieldChange}
+                  placeholder="Username"
+                  className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none"
+                />
+              </div>
+              {errors.username ? (
+                <p className="text-xs text-rose-600">{errors.username}</p>
+              ) : null}
+            </label>
 
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-3 font-semibold text-slate-950 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {status.loading ? "Creating account..." : "Create account"}
-            </button>
-          </form>
-        </div>
+            <label className="space-y-1.5 text-sm">
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+                Email
+              </span>
+              <div className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2.5 focus-within:border-slate-900">
+                <FiAtSign className="text-slate-500" />
+                <input
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={onFieldChange}
+                  placeholder="Email"
+                  className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none"
+                />
+              </div>
+              {errors.email ? (
+                <p className="text-xs text-rose-600">{errors.email}</p>
+              ) : null}
+            </label>
+          </div>
+
+          <label className="mt-3 block space-y-1.5 text-sm">
+            <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+              Password
+            </span>
+            <div className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2.5 focus-within:border-slate-900">
+              <FiLock className="text-slate-500" />
+              <input
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                onChange={onFieldChange}
+                placeholder="Minimum 8 characters"
+                className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="text-slate-400 transition hover:text-slate-900"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
+            </div>
+            {errors.password ? (
+              <p className="text-xs text-rose-600">{errors.password}</p>
+            ) : null}
+          </label>
+
+          {status.server ? (
+            <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              {status.server}
+            </p>
+          ) : null}
+
+          {status.success ? (
+            <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+              {status.success}
+            </p>
+          ) : null}
+
+          <motion.button
+            type="submit"
+            disabled={!canSubmit}
+            {...motionSafe({ whileHover: { y: -1, scale: 1.01 }, whileTap: { scale: 0.98 } })}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {status.loading ? "Creating account..." : "Create account"}
+          </motion.button>
+        </motion.form>
       </section>
-    </main>
+    </motion.main>
   );
 };
 

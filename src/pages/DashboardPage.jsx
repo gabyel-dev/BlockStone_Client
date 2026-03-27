@@ -10,6 +10,8 @@ import ShiftAgendaCard from "../components/dashboard/ShiftAgendaCard";
 import StockRadarCard from "../components/dashboard/StockRadarCard";
 import ThroughputChartCard from "../components/dashboard/ThroughputChartCard";
 import DashboardSkeleton from "../components/skeletons/dashboard/DashboardSkeleton";
+import ShiftAgendaModal from "../components/Agendas/shiftAgenda";
+import { getShiftAgenda } from "../api/print";
 
 // Main dashboard page that loads analytics and passes data into UI cards.
 const DashboardPage = () => {
@@ -24,6 +26,9 @@ const DashboardPage = () => {
   const [throughput, setThroughput] = useState([]);
   const [revenueMix, setRevenueMix] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [onClose, setOnClose] = useState(false);
+
+  const [agendaData, setAgendaData] = useState([]);
 
   const stockRadar = [
     { name: "Matte Paper A4", level: 12, tone: "red", status: "Critical" },
@@ -99,6 +104,38 @@ const DashboardPage = () => {
     };
   }, [period, referenceDate]);
 
+  useEffect(() => {
+    const loadAgenda = async () => {
+      try {
+        const cachedRaw = localStorage.getItem("agenda-data");
+
+        if (cachedRaw) {
+          try {
+            const cached = JSON.parse(cachedRaw);
+            if (Array.isArray(cached)) {
+              setAgendaData(cached);
+              return;
+            }
+          } catch {
+            localStorage.removeItem("agenda-data");
+          }
+        }
+
+        const response = await getShiftAgenda();
+        const fetched = response?.data?.agendaData;
+        const normalized = Array.isArray(fetched) ? fetched : [];
+
+        setAgendaData(normalized);
+        localStorage.setItem("agenda-data", JSON.stringify(normalized));
+      } catch (error) {
+        setAgendaData([]);
+        localStorage.removeItem("agenda-data");
+      }
+    };
+
+    loadAgenda();
+  }, []);
+
   if (isLoading) {
     return <DashboardSkeleton />;
   }
@@ -115,8 +152,12 @@ const DashboardPage = () => {
 
       <section className="grid gap-4 sm:gap-6 xl:grid-cols-12">
         <PulseSection summary={summary} period={period} />
-        <ShiftAgendaCard />
+        <ShiftAgendaCard setClose={setOnClose} agendaData={agendaData} />
       </section>
+
+      {onClose && (
+        <ShiftAgendaModal onClose={setOnClose} agendaData={agendaData} />
+      )}
 
       <section className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 xl:grid-cols-12">
         <ThroughputChartCard period={period} throughput={throughput} />
