@@ -174,7 +174,7 @@ const SidePanel = ({ user }) => {
       </div>
 
       <nav
-        className={`fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-[0_18px_34px_-20px_rgba(15,23,42,0.55)] backdrop-blur lg:hidden ${
+        className={`fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-slate-100  p-2 shadow-[0_18px_34px_-20px_rgba(15,23,42,0.55)] backdrop-blur lg:hidden bg-black/40 ${
           isLoggingOut ? "pointer-events-none" : ""
         }`}
       >
@@ -187,24 +187,17 @@ const SidePanel = ({ user }) => {
               className={({ isActive }) =>
                 `group flex min-h-15 flex-col items-center justify-center rounded-xl px-1 py-2 text-[11px] font-semibold transition-all duration-150 ${
                   isActive
-                    ? "bg-slate-900 text-white"
-                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                    ? "bg-slate-900/30 text-white backdrop-blur-2xl"
+                    : "text-slate-100 hover:bg-slate-100 hover:text-slate-900"
                 }`
               }
             >
               {({ isActive }) => (
                 <>
                   <span
-                    className={`grid h-7 w-7 place-items-center rounded-lg transition ${
-                      isActive
-                        ? "bg-white/20 text-white"
-                        : "bg-slate-100 text-slate-500 group-hover:bg-white"
-                    }`}
+                    className={`grid h-7 w-7 place-items-center rounded-lg transition`}
                   >
                     {item.icon}
-                  </span>
-                  <span className="mt-1 truncate text-[10px] leading-tight">
-                    {item.name}
                   </span>
                 </>
               )}
@@ -232,9 +225,6 @@ const SidePanel = ({ user }) => {
                   />
                 </span>
               </span>
-              <span className="mt-1 truncate text-[10px] leading-tight">
-                Profile
-              </span>
             </button>
 
             {isProfileMenuOpen ? (
@@ -248,7 +238,7 @@ const SidePanel = ({ user }) => {
                   className="mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
                 >
                   <FaUsers size={14} />
-                  View Profile
+                  Manage users
                 </button>
 
                 <button

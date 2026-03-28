@@ -439,7 +439,7 @@ const SalesPage = () => {
             </div>
           ) : null}
 
-          <div className="space-y-2 md:hidden">
+          <div className="space-y-2 md:hidden ">
             {sales.length === 0 ? (
               <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-5 text-center text-sm font-semibold text-slate-500">
                 No transactions found for this period.
@@ -458,7 +458,7 @@ const SalesPage = () => {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-                        Order #{transaction.tid}
+                        OID-#{transaction.tid}
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
                         {formatDateTime(transaction.transaction_date)}
@@ -480,10 +480,7 @@ const SalesPage = () => {
                     </p>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="rounded-full bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                      {transaction.payment_method || "cash"}
-                    </span>
+                  <div className="mt-3 flex items-end justify-end">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() =>
@@ -491,14 +488,14 @@ const SalesPage = () => {
                         }
                         className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-900 hover:text-slate-900"
                       >
-                        View Full
+                        expand
                       </button>
                       {isAdmin ? (
                         <button
                           onClick={() => setTransactionToDelete(transaction)}
                           className="inline-flex items-center gap-1 rounded-lg border border-rose-300 bg-rose-50 px-2 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-rose-700 transition hover:border-rose-400 hover:bg-rose-100"
                         >
-                          <FiTrash2 size={12} /> Delete
+                          <FiTrash2 size={12} />
                         </button>
                       ) : null}
                     </div>
@@ -568,14 +565,14 @@ const SalesPage = () => {
                           }
                           className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-900 hover:text-slate-900"
                         >
-                          View Full
+                          expand
                         </button>
                         {isAdmin ? (
                           <button
                             onClick={() => setTransactionToDelete(transaction)}
                             className="inline-flex items-center gap-1 rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-rose-700 transition hover:border-rose-400 hover:bg-rose-100"
                           >
-                            <FiTrash2 size={12} /> Delete
+                            <FiTrash2 size={12} />
                           </button>
                         ) : null}
                       </div>
