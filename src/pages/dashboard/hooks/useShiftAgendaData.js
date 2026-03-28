@@ -1,34 +1,53 @@
-import { useEffect, useState } from "react";
-import { getShiftAgenda } from "../../../api/print";
+import { useCallback, useEffect, useState } from "react";
+import {
+  createShiftAgenda,
+  deleteShiftAgenda,
+  getShiftAgenda,
+  updateShiftAgenda,
+} from "../../../api/print";
 
-// Loads shift-agenda rows using local cache fallback to reduce redundant requests.
+// Manages shift agenda list plus CRUD helpers used by dashboard cards/modals.
 export const useShiftAgendaData = () => {
   const [agendaData, setAgendaData] = useState([]);
+  const [isAgendaLoading, setIsAgendaLoading] = useState(false);
 
-  useEffect(() => {
-    const loadAgenda = async () => {
-      try {
-        const cachedRaw = localStorage.getItem("agenda-data");
-
-        if (cachedRaw) {
-          const cached = JSON.parse(cachedRaw);
-          setAgendaData(cached);
-          return;
-        }
-
-        const response = await getShiftAgenda();
-        const fetched = response?.data?.agendaData;
-
-        setAgendaData(fetched);
-        localStorage.setItem("agenda-data", JSON.stringify(fetched));
-      } catch {
-        setAgendaData([]);
-        localStorage.removeItem("agenda-data");
-      }
-    };
-
-    loadAgenda();
+  const loadAgenda = useCallback(async () => {
+    try {
+      setIsAgendaLoading(true);
+      const response = await getShiftAgenda();
+      setAgendaData(response?.data?.agendaData ?? []);
+    } catch {
+      setAgendaData([]);
+    } finally {
+      setIsAgendaLoading(false);
+    }
   }, []);
 
-  return { agendaData };
+  const addAgenda = async (payload) => {
+    await createShiftAgenda(payload);
+    await loadAgenda();
+  };
+
+  const editAgenda = async (aid, payload) => {
+    await updateShiftAgenda({ aid, payload });
+    await loadAgenda();
+  };
+
+  const removeAgenda = async (aid) => {
+    await deleteShiftAgenda(aid);
+    await loadAgenda();
+  };
+
+  useEffect(() => {
+    loadAgenda();
+  }, [loadAgenda]);
+
+  return {
+    agendaData,
+    isAgendaLoading,
+    loadAgenda,
+    addAgenda,
+    editAgenda,
+    removeAgenda,
+  };
 };

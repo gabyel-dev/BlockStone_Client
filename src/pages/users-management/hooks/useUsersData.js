@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getUsers } from "../../../api/auth";
 
 export const useUsersData = () => {
@@ -6,42 +6,39 @@ export const useUsersData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const loadUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await getUsers();
+      const userList = response?.data?.data ?? [];
+      setUsers(userList);
+    } catch {
+      setError("Unable to load users. Please refresh and try again.");
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
 
-    const loadUsers = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const response = await getUsers();
-        const userList = response?.data?.data ?? [];
-
-        if (isMounted) {
-          setUsers(userList);
-        }
-      } catch {
-        if (isMounted) {
-          setError("Unable to load users. Please refresh and try again.");
-          setUsers([]);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadUsers();
+    if (isMounted) {
+      loadUsers();
+    }
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [loadUsers]);
 
   return {
     users,
+    setUsers,
     loading,
     error,
+    reloadUsers: loadUsers,
   };
 };

@@ -4,13 +4,15 @@ import {
   FiCalendar,
   FiChevronLeft,
   FiChevronRight,
+  FiTrash2,
   FiPackage,
   FiShoppingCart,
   FiTrendingUp,
 } from "react-icons/fi";
 import { toast } from "sonner";
-import { useLocation } from "react-router-dom";
-import { getTransactions } from "../api/print";
+import { useLocation, useOutletContext } from "react-router-dom";
+import { deleteTransaction, getTransactions } from "../api/print";
+import ConfirmActionModal from "../components/common/ConfirmActionModal";
 import TransactionDetailModal from "../components/sales/TransactionDetailModal";
 import { periods, peso } from "./sales/constants";
 import {
@@ -52,6 +54,7 @@ const SalesTableSkeleton = ({ rows = 6 }) => (
 );
 
 const SalesPage = () => {
+  const { user } = useOutletContext();
   const location = useLocation();
   const activeMenu = location.state?.menu || "Sales";
 
@@ -74,6 +77,8 @@ const SalesPage = () => {
   const [error, setError] = useState("");
 
   const [selectedTransactionId, setSelectedTransactionId] = useState(null);
+  const [transactionToDelete, setTransactionToDelete] = useState(null);
+  const [isDeletingTransaction, setIsDeletingTransaction] = useState(false);
 
   const lastSeenTransactionId = useRef(null);
 
@@ -261,6 +266,28 @@ const SalesPage = () => {
 
   const shouldReduceMotion = useReducedMotion();
   const motionSafe = (props) => (shouldReduceMotion ? {} : props);
+  const isAdmin = String(user?.role || "").toLowerCase() === "admin";
+
+  const handleDeleteTransaction = async () => {
+    if (!transactionToDelete?.tid) {
+      return;
+    }
+
+    try {
+      setIsDeletingTransaction(true);
+      await deleteTransaction(transactionToDelete.tid);
+      setTransactionToDelete(null);
+      toast.success(`Transaction #${transactionToDelete.tid} deleted.`);
+      await fetchSales();
+    } catch (requestError) {
+      toast.error(
+        requestError?.response?.data?.message ||
+          "Unable to delete transaction.",
+      );
+    } finally {
+      setIsDeletingTransaction(false);
+    }
+  };
 
   return (
     <main className="min-h-screen py-4 text-slate-900 sm:py-7 pr-6 pl-6 md:pl-0">
@@ -457,12 +484,24 @@ const SalesPage = () => {
                     <span className="rounded-full bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
                       {transaction.payment_method || "cash"}
                     </span>
-                    <button
-                      onClick={() => setSelectedTransactionId(transaction.tid)}
-                      className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-900 hover:text-slate-900"
-                    >
-                      View Full
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() =>
+                          setSelectedTransactionId(transaction.tid)
+                        }
+                        className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-900 hover:text-slate-900"
+                      >
+                        View Full
+                      </button>
+                      {isAdmin ? (
+                        <button
+                          onClick={() => setTransactionToDelete(transaction)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-rose-300 bg-rose-50 px-2 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-rose-700 transition hover:border-rose-400 hover:bg-rose-100"
+                        >
+                          <FiTrash2 size={12} /> Delete
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
                 </motion.article>
               ))
@@ -522,14 +561,24 @@ const SalesPage = () => {
                       {peso.format(Number(transaction.total_amount ?? 0))}
                     </td>
                     <td className="rounded-r-xl px-3 py-3 text-right">
-                      <button
-                        onClick={() =>
-                          setSelectedTransactionId(transaction.tid)
-                        }
-                        className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-900 hover:text-slate-900"
-                      >
-                        View Full
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() =>
+                            setSelectedTransactionId(transaction.tid)
+                          }
+                          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-900 hover:text-slate-900"
+                        >
+                          View Full
+                        </button>
+                        {isAdmin ? (
+                          <button
+                            onClick={() => setTransactionToDelete(transaction)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-rose-700 transition hover:border-rose-400 hover:bg-rose-100"
+                          >
+                            <FiTrash2 size={12} /> Delete
+                          </button>
+                        ) : null}
+                      </div>
                     </td>
                   </motion.tr>
                 ))}
@@ -566,6 +615,17 @@ const SalesPage = () => {
       <TransactionDetailModal
         transactionId={selectedTransactionId}
         onClose={() => setSelectedTransactionId(null)}
+      />
+
+      <ConfirmActionModal
+        open={Boolean(transactionToDelete)}
+        title="Delete transaction?"
+        message={`Transaction #${transactionToDelete?.tid || ""} will be permanently removed.`}
+        confirmLabel="Delete transaction"
+        confirmTone="danger"
+        isSubmitting={isDeletingTransaction}
+        onCancel={() => setTransactionToDelete(null)}
+        onConfirm={handleDeleteTransaction}
       />
     </main>
   );

@@ -29,7 +29,8 @@ const DashboardPage = () => {
     period,
     referenceDate,
   });
-  const { agendaData } = useShiftAgendaData();
+  const { agendaData, addAgenda, editAgenda, removeAgenda, isAgendaLoading } =
+    useShiftAgendaData();
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -51,7 +52,14 @@ const DashboardPage = () => {
       </section>
 
       {onClose && (
-        <ShiftAgendaModal onClose={setOnClose} agendaData={agendaData} />
+        <ShiftAgendaModal
+          onClose={setOnClose}
+          agendaData={agendaData}
+          onCreate={addAgenda}
+          onUpdate={editAgenda}
+          onDelete={removeAgenda}
+          isLoading={isAgendaLoading}
+        />
       )}
 
       <section className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 xl:grid-cols-12">

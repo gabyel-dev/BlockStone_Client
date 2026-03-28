@@ -5,22 +5,62 @@ import {
   FiMail,
   FiSearch,
   FiShield,
+  FiTrash2,
   FiUser,
   FiUsers,
 } from "react-icons/fi";
-import { useLocation } from "react-router-dom";
+import { useLocation, useOutletContext } from "react-router-dom";
+import { toast } from "sonner";
+import { deleteUser, updateUserRole } from "../api/auth";
+import ConfirmActionModal from "../components/common/ConfirmActionModal";
 import { useUsersData } from "./users-management/hooks/useUsersData";
 import { buildUserStats, filterUsers } from "./users-management/utils/metrics";
 
 const UsersManagementPage = () => {
+  const { user: currentUser } = useOutletContext();
   const location = useLocation();
   const activeMenu = location.state?.menu || "Users Management";
 
-  const { users, loading, error } = useUsersData();
+  const { users, loading, error, reloadUsers } = useUsersData();
   const [roleFilter, setRoleFilter] = useState("all");
   const [searchText, setSearchText] = useState("");
+  const [confirmState, setConfirmState] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const motionSafe = (props) => (shouldReduceMotion ? {} : props);
+
+  const handleConfirmAction = async () => {
+    if (!confirmState) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      if (confirmState.type === "role") {
+        await updateUserRole({
+          id: confirmState.user.id,
+          role: confirmState.nextRole,
+        });
+        toast.success(`Role updated to ${confirmState.nextRole}.`);
+      }
+
+      if (confirmState.type === "delete") {
+        await deleteUser(confirmState.user.id);
+        toast.success("User deleted.");
+      }
+
+      setConfirmState(null);
+      await reloadUsers();
+    } catch (requestError) {
+      toast.error(
+        requestError?.response?.data?.message ||
+          "Unable to complete this action.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const stats = useMemo(() => {
     return buildUserStats(users);
@@ -248,6 +288,42 @@ const UsersManagementPage = () => {
                       >
                         {isAdmin ? "Admin" : "User"}
                       </span>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setConfirmState({
+                              type: "role",
+                              user: entry,
+                              nextRole: isAdmin ? "user" : "admin",
+                            })
+                          }
+                          disabled={
+                            String(currentUser?.id || "") ===
+                            String(entry.id || "")
+                          }
+                          className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-bold text-slate-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {isAdmin ? "Set User" : "Set Admin"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setConfirmState({
+                              type: "delete",
+                              user: entry,
+                            })
+                          }
+                          disabled={
+                            String(currentUser?.id || "") ===
+                            String(entry.id || "")
+                          }
+                          className="inline-flex items-center gap-1 rounded-lg border border-rose-300 bg-rose-50 px-2 py-1 text-xs font-bold text-rose-700 transition hover:border-rose-400 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <FiTrash2 size={12} /> Delete
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
                 );
@@ -270,6 +346,27 @@ const UsersManagementPage = () => {
           </div>
         </div>
       </section>
+
+      <ConfirmActionModal
+        open={Boolean(confirmState)}
+        title={
+          confirmState?.type === "delete"
+            ? "Delete user account?"
+            : "Update user role?"
+        }
+        message={
+          confirmState?.type === "delete"
+            ? `This will permanently remove ${confirmState?.user?.first_name || "this user"}.`
+            : `Change ${confirmState?.user?.first_name || "this user"} to ${confirmState?.nextRole}?`
+        }
+        confirmLabel={
+          confirmState?.type === "delete" ? "Delete user" : "Update role"
+        }
+        confirmTone={confirmState?.type === "delete" ? "danger" : "primary"}
+        isSubmitting={isSubmitting}
+        onCancel={() => setConfirmState(null)}
+        onConfirm={handleConfirmAction}
+      />
     </motion.main>
   );
 };
