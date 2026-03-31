@@ -9,7 +9,7 @@ import StockRadarCard from "../components/dashboard/StockRadarCard";
 import ThroughputChartCard from "../components/dashboard/ThroughputChartCard";
 import DashboardSkeleton from "../components/skeletons/dashboard/DashboardSkeleton";
 import ShiftAgendaModal from "../components/Agendas/shiftAgenda";
-import { stockRadar } from "./dashboard/constants/stockRadar";
+import { useInventoryData } from "../hooks/useInventoryData";
 import { useDashboardData } from "./dashboard/hooks/useDashboardData";
 import { useShiftAgendaData } from "./dashboard/hooks/useShiftAgendaData";
 
@@ -28,6 +28,7 @@ const DashboardPage = () => {
     period,
     referenceDate,
   });
+  const { stockRadar, metrics: inventoryMetrics } = useInventoryData();
   const { agendaData, addAgenda, editAgenda, removeAgenda, isAgendaLoading } =
     useShiftAgendaData();
 
@@ -68,7 +69,12 @@ const DashboardPage = () => {
 
       <section className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 xl:grid-cols-12">
         <CategoryIncomeChartCard mixData={revenueMix} />
-        <StockRadarCard stockRadar={stockRadar} />
+        <StockRadarCard
+          stockRadar={stockRadar}
+          criticalPercentage={inventoryMetrics.criticalPercentage}
+          criticalCount={inventoryMetrics.criticalItems}
+          totalItems={inventoryMetrics.totalItems}
+        />
       </section>
     </div>
   );

@@ -95,7 +95,7 @@ const SidePanel = ({ user }) => {
             <div className="border-b border-slate-200 bg-linear-to-br from-slate-50 via-white to-sky-50 p-6">
               <div className="flex items-center gap-4">
                 <img
-                  src="https://cdn.vectorstock.com/i/500p/43/97/default-avatar-photo-placeholder-icon-grey-vector-38594397.jpg"
+                  src="https://i.pinimg.com/736x/58/7b/57/587b57f888b1cdcc0e895cbdcfde1c1e.jpg"
                   alt="profile"
                   className="h-12 w-12 rounded-full border-2 border-slate-900 object-cover"
                 />
@@ -212,7 +212,7 @@ const SidePanel = ({ user }) => {
             >
               <span className="relative">
                 <img
-                  src="https://cdn.vectorstock.com/i/500p/43/97/default-avatar-photo-placeholder-icon-grey-vector-38594397.jpg"
+                  src="https://i.pinimg.com/736x/58/7b/57/587b57f888b1cdcc0e895cbdcfde1c1e.jpg"
                   alt="profile"
                   className="h-7 w-7 rounded-full border border-slate-300 object-cover"
                 />

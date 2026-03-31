@@ -1,5 +1,6 @@
 import { FaPlus } from "react-icons/fa6";
 import { FiX } from "react-icons/fi";
+import { motion } from "framer-motion";
 import { FaEdit } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -12,7 +13,7 @@ const defaultForm = {
 };
 
 const mapAgendaDescription = (agenda = {}) => {
-  return agenda.agenda_descrription || agenda.agenda_description || "";
+  return agenda.agenda_descrription;
 };
 
 export default function ShiftAgendaModal({
