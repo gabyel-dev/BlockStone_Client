@@ -26,6 +26,7 @@ const PosPage = () => {
   const activeMenu = location.state?.menu || "POS";
 
   const [customerName, setCustomerName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderItems, setOrderItems] = useState([]);
   const [notice, setNotice] = useState("");
   const [catalog, setCatalog] = useState([]);
@@ -141,6 +142,8 @@ const PosPage = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       const response = await createTransaction({
         paymentMethod: "Order",
@@ -162,6 +165,8 @@ const PosPage = () => {
         "Unable to place order. Please try again.";
 
       toast.error(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -280,6 +285,7 @@ const PosPage = () => {
           subtotal={subtotal}
           notice={notice}
           onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
         />
       </section>
     </motion.main>

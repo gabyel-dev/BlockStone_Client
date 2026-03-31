@@ -3,7 +3,6 @@ import { useOutletContext } from "react-router-dom";
 import CategoryIncomeChartCard from "../components/dashboard/CategoryIncomeChartCard";
 import DashboardHeader from "../components/dashboard/DashboardHeader";
 import PulseSection from "../components/dashboard/PulseSection";
-import QuickActionsCard from "../components/dashboard/QuickActionsCard";
 import RevenueMixCard from "../components/dashboard/RevenueMixCard";
 import ShiftAgendaCard from "../components/dashboard/ShiftAgendaCard";
 import StockRadarCard from "../components/dashboard/StockRadarCard";
@@ -71,8 +70,6 @@ const DashboardPage = () => {
         <CategoryIncomeChartCard mixData={revenueMix} />
         <StockRadarCard stockRadar={stockRadar} />
       </section>
-
-      <QuickActionsCard />
     </div>
   );
 };

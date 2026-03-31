@@ -2,7 +2,7 @@ const shimmer = "animate-pulse rounded-xl bg-slate-200/80";
 
 const DashboardSkeleton = () => {
   return (
-    <div className="w-full py-7 text-slate-900">
+    <div className="w-full absolute py-10 text-slate-900">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className={`${shimmer} mb-2 h-3 w-24`} />

@@ -16,6 +16,7 @@ const OrderTicketAside = ({
   subtotal,
   notice,
   onSubmit,
+  isSubmitting,
 }) => {
   const shouldReduceMotion = useReducedMotion();
   const motionSafe = (props) => (shouldReduceMotion ? {} : props);
@@ -158,6 +159,7 @@ const OrderTicketAside = ({
               whileHover: { y: -1, scale: 1.01 },
               whileTap: { scale: 0.98 },
             })}
+            disabled={isSubmitting}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700 sm:py-3"
           >
             <FiCheckCircle size={16} /> Place Order

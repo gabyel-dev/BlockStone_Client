@@ -230,6 +230,13 @@ const SalesPage = () => {
       );
     }
 
+    // after deleting a modal notif is added with 2 option (undo) and delete permanently
+    // if click undo remove timer
+    // if delete permanently, remove the modal and add a toast.error(deleted)
+    // if timer finishes
+    // delete the transaction and toast.error(deleted)
+    const [isTimerStart, setIsTimerStart] = useState(false);
+
     return (
       <details className="w-full sm:w-auto">
         <summary className="cursor-pointer list-none rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-slate-600 sm:text-sm">

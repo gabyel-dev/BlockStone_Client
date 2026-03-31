@@ -218,9 +218,7 @@ const UsersManagementPage = () => {
       <section className="mt-6 rounded-[30px] border border-slate-200 bg-white p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-xl font-black text-slate-900">User Directory</h3>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-            Cached locally
-          </p>
+
         </div>
 
         {error ? (
@@ -254,7 +252,7 @@ const UsersManagementPage = () => {
                       initial: { opacity: 0, y: 6 },
                       animate: { opacity: 1, y: 0 },
                     })}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+                    className="flex flex-col md:flex-row items-start justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="grid h-10 w-10 place-items-center rounded-lg bg-white text-slate-700">
@@ -275,10 +273,7 @@ const UsersManagementPage = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1 rounded-lg bg-white px-2 py-1 text-xs font-semibold text-slate-600">
-                        <FiMail size={12} /> {entry.email}
-                      </span>
+                    <div className="flex  items-end justify-end w-full gap-2">
                       <span
                         className={`rounded-lg px-2 py-1 text-xs font-bold uppercase tracking-[0.12em] ${
                           isAdmin
@@ -321,7 +316,7 @@ const UsersManagementPage = () => {
                           }
                           className="inline-flex items-center gap-1 rounded-lg border border-rose-300 bg-rose-50 px-2 py-1 text-xs font-bold text-rose-700 transition hover:border-rose-400 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          <FiTrash2 size={12} /> Delete
+                          <FiTrash2 size={12} />
                         </button>
                       </div>
                     </div>

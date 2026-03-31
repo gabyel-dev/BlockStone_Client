@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { FaPlus } from "react-icons/fa6";
 import { FiX } from "react-icons/fi";
 import { FaEdit } from "react-icons/fa";
@@ -283,7 +282,7 @@ export default function ShiftAgendaModal({
       <ConfirmActionModal
         open={Boolean(deleteCandidate)}
         title="Delete agenda item?"
-        message={`This will permanently remove \"${deleteCandidate?.agenda_title || "this agenda"}\".`}
+        message={`This will permanently remove "${deleteCandidate?.agenda_title}".`}
         confirmLabel="Delete agenda"
         confirmTone="danger"
         isSubmitting={isSubmitting}

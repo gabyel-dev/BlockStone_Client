@@ -22,7 +22,7 @@ export const useDashboardData = ({ period, referenceDate }) => {
           period,
           date: referenceDate,
         });
-        const payload = response?.data?.data ?? {};
+        const payload = response?.data?.data;
 
         if (!isMounted) {
           return;
