@@ -9,7 +9,7 @@ import ConfirmActionModal from "../common/ConfirmActionModal";
 const defaultForm = {
   title: "",
   description: "",
-  priority: "med",
+  priority: "purchase",
 };
 
 const mapAgendaDescription = (agenda = {}) => {
@@ -101,7 +101,7 @@ export default function ShiftAgendaModal({
     setForm({
       title: agenda.agenda_title || "",
       description: mapAgendaDescription(agenda),
-      priority: agenda.priority || "med",
+      priority: agenda.priority || "purchase",
     });
   };
 
@@ -179,9 +179,9 @@ export default function ShiftAgendaModal({
                   }
                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-900"
                 >
-                  <option value="high">High</option>
-                  <option value="med">Medium</option>
-                  <option value="low">Low</option>
+                  <option value="priority">Priority</option>
+                  <option value="purchase">Purchase</option>
+                  <option value="profit">Profit</option>
                 </select>
                 <textarea
                   value={form.description}

@@ -30,7 +30,7 @@ const ShiftAgendaCard = ({ setClose, agendaData }) => {
               className="flex gap-2.5 rounded-xl bg-slate-50 p-2.5 shadow-[0_8px_18px_rgba(15,23,42,0.04)] sm:gap-3 sm:p-3"
             >
               <span
-                className={`mt-1 h-2.5 w-2.5 rounded-full ${a.priority === "high" ? "bg-red-500" : a.priority === "med" ? "bg-orange-500" : "bg-green-500"}`}
+                className={`mt-1 h-2.5 w-2.5 rounded-full ${a.priority === "priority" ? "bg-red-500" : a.priority === "purchase" ? "bg-gray-500" : "bg-green-500"}`}
               />
               <div>
                 <p className="text-sm font-bold text-slate-800">
