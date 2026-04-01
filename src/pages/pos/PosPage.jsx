@@ -189,7 +189,13 @@ const PosPage = () => {
         </div>
       </header>
 
-      <section className="grid gap-4 sm:gap-6 xl:grid-cols-12">
+      <img
+        src="/logo.png"
+        alt="logo"
+        className="absolute right-1/4 top-1/3 bg-no-repeat scale-150 opacity-3"
+      />
+
+      <section className="grid overflow-hidden gap-4 sm:gap-6 xl:grid-cols-12">
         <div className="space-y-3 sm:space-y-4 xl:col-span-7">
           {catalogError ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
@@ -225,7 +231,7 @@ const PosPage = () => {
                 </span>
               </div>
 
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-2 overflow-hidden sm:grid-cols-2">
                 {group.items.map((item, index) => (
                   <motion.button
                     key={`${item.id}-${item.priceOptionId ?? item.name}`}
