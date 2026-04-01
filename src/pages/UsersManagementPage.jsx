@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   FiLoader,
-  FiMail,
+  FiLock,
+  FiPlus,
   FiSearch,
   FiShield,
   FiTrash2,
@@ -11,10 +12,18 @@ import {
 } from "react-icons/fi";
 import { useLocation, useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
-import { deleteUser, updateUserRole } from "../api/auth";
+import { deleteUser, registerUser, updateUserRole } from "../api/auth";
 import ConfirmActionModal from "../components/common/ConfirmActionModal";
 import { useUsersData } from "./users-management/hooks/useUsersData";
 import { buildUserStats, filterUsers } from "./users-management/utils/metrics";
+
+const INITIAL_ADD_USER_FORM = {
+  first_name: "",
+  last_name: "",
+  username: "",
+  email: "",
+  password: "",
+};
 
 const UsersManagementPage = () => {
   const { user: currentUser } = useOutletContext();
@@ -26,6 +35,11 @@ const UsersManagementPage = () => {
   const [searchText, setSearchText] = useState("");
   const [confirmState, setConfirmState] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [isAddUserSubmitting, setIsAddUserSubmitting] = useState(false);
+  const [addUserForm, setAddUserForm] = useState(INITIAL_ADD_USER_FORM);
+  const [addUserErrors, setAddUserErrors] = useState({});
+  const [addUserServerError, setAddUserServerError] = useState("");
   const shouldReduceMotion = useReducedMotion();
   const motionSafe = (props) => (shouldReduceMotion ? {} : props);
 
@@ -65,6 +79,69 @@ const UsersManagementPage = () => {
   const stats = useMemo(() => {
     return buildUserStats(users);
   }, [users]);
+
+  const onOpenAddUserModal = () => {
+    setIsAddUserOpen(true);
+    setAddUserErrors({});
+    setAddUserServerError("");
+  };
+
+  const onCloseAddUserModal = () => {
+    if (isAddUserSubmitting) {
+      return;
+    }
+
+    setIsAddUserOpen(false);
+    setAddUserForm(INITIAL_ADD_USER_FORM);
+    setAddUserErrors({});
+    setAddUserServerError("");
+  };
+
+  const onAddUserFieldChange = (event) => {
+    const { name, value } = event.target;
+    setAddUserForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const canSubmitAddUser =
+    addUserForm.first_name.trim().length > 0 &&
+    addUserForm.last_name.trim().length > 0 &&
+    addUserForm.username.trim().length > 0 &&
+    addUserForm.email.trim().length > 0 &&
+    addUserForm.password.length >= 8;
+
+  const onSubmitAddUser = async (event) => {
+    event.preventDefault();
+
+    if (!canSubmitAddUser) {
+      return;
+    }
+
+    try {
+      setIsAddUserSubmitting(true);
+      setAddUserErrors({});
+      setAddUserServerError("");
+
+      await registerUser({
+        first_name: addUserForm.first_name.trim(),
+        last_name: addUserForm.last_name.trim(),
+        username: addUserForm.username.trim(),
+        email: addUserForm.email.trim().toLowerCase(),
+        password: addUserForm.password,
+      });
+
+      toast.success("User account created.");
+      onCloseAddUserModal();
+      await reloadUsers();
+    } catch (requestError) {
+      setAddUserErrors(requestError?.response?.data?.errors ?? {});
+      setAddUserServerError(
+        requestError?.response?.data?.message ||
+          "Unable to create user account.",
+      );
+    } finally {
+      setIsAddUserSubmitting(false);
+    }
+  };
 
   const filteredUsers = useMemo(() => {
     return filterUsers({ users, roleFilter, searchText });
@@ -218,7 +295,14 @@ const UsersManagementPage = () => {
       <section className="mt-6 rounded-[30px] border border-slate-200 bg-white p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-xl font-black text-slate-900">User Directory</h3>
-
+          <button
+            type="button"
+            onClick={onOpenAddUserModal}
+            className="hidden md:inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-slate-700"
+          >
+            <FiPlus size={14} />
+            Add User
+          </button>
         </div>
 
         {error ? (
@@ -362,6 +446,157 @@ const UsersManagementPage = () => {
         onCancel={() => setConfirmState(null)}
         onConfirm={handleConfirmAction}
       />
+
+      {isAddUserOpen ? (
+        <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/50 p-4">
+          <motion.div
+            className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"
+            {...motionSafe({
+              initial: { opacity: 0, y: 10 },
+              animate: { opacity: 1, y: 0 },
+            })}
+          >
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                  Users Management
+                </p>
+                <h3 className="text-lg font-black text-slate-900">Add User</h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={onCloseAddUserModal}
+                disabled={isAddUserSubmitting}
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Close
+              </button>
+            </div>
+
+            {addUserServerError ? (
+              <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                {addUserServerError}
+              </div>
+            ) : null}
+
+            <form className="space-y-3" onSubmit={onSubmitAddUser}>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="text-sm font-semibold text-slate-700">
+                  First name
+                  <input
+                    name="first_name"
+                    value={addUserForm.first_name}
+                    onChange={onAddUserFieldChange}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-900"
+                    placeholder="Juan"
+                  />
+                  {addUserErrors?.first_name ? (
+                    <span className="mt-1 block text-xs text-rose-600">
+                      {addUserErrors.first_name}
+                    </span>
+                  ) : null}
+                </label>
+
+                <label className="text-sm font-semibold text-slate-700">
+                  Last name
+                  <input
+                    name="last_name"
+                    value={addUserForm.last_name}
+                    onChange={onAddUserFieldChange}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-900"
+                    placeholder="Dela Cruz"
+                  />
+                  {addUserErrors?.last_name ? (
+                    <span className="mt-1 block text-xs text-rose-600">
+                      {addUserErrors.last_name}
+                    </span>
+                  ) : null}
+                </label>
+              </div>
+
+              <label className="text-sm font-semibold text-slate-700">
+                Username
+                <input
+                  name="username"
+                  value={addUserForm.username}
+                  onChange={onAddUserFieldChange}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-900"
+                  placeholder="juan.delacruz"
+                />
+                {addUserErrors?.username ? (
+                  <span className="mt-1 block text-xs text-rose-600">
+                    {addUserErrors.username}
+                  </span>
+                ) : null}
+              </label>
+
+              <label className="text-sm font-semibold text-slate-700">
+                Email
+                <input
+                  type="email"
+                  name="email"
+                  value={addUserForm.email}
+                  onChange={onAddUserFieldChange}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-900"
+                  placeholder="juan@email.com"
+                />
+                {addUserErrors?.email ? (
+                  <span className="mt-1 block text-xs text-rose-600">
+                    {addUserErrors.email}
+                  </span>
+                ) : null}
+              </label>
+
+              <label className="text-sm font-semibold text-slate-700">
+                Password
+                <div className="mt-1 flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 focus-within:border-slate-900">
+                  <FiLock className="shrink-0 text-slate-400" size={15} />
+                  <input
+                    type="password"
+                    name="password"
+                    value={addUserForm.password}
+                    onChange={onAddUserFieldChange}
+                    className="w-full text-sm outline-none"
+                    placeholder="Minimum 8 characters"
+                  />
+                </div>
+                {addUserErrors?.password ? (
+                  <span className="mt-1 block text-xs text-rose-600">
+                    {addUserErrors.password}
+                  </span>
+                ) : null}
+              </label>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={!canSubmitAddUser || isAddUserSubmitting}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isAddUserSubmitting ? (
+                    <>
+                      <FiLoader className="animate-spin" size={14} />
+                      Creating account...
+                    </>
+                  ) : (
+                    "Create user"
+                  )}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      ) : null}
+
+      <button
+        type="button"
+        onClick={onOpenAddUserModal}
+        className="fixed bottom-24 right-4 z-30 grid h-12 w-12 place-items-center rounded-full bg-slate-900 text-white shadow-[0_14px_30px_-16px_rgba(15,23,42,0.65)] transition hover:bg-slate-700 md:hidden"
+        aria-label="Add user"
+      >
+        <FiPlus size={20} />
+      </button>
     </motion.main>
   );
 };

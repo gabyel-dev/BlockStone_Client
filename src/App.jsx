@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
-import RegisterPage from "./pages/RegisterPage";
+import HomePage from "./pages/HomePage";
 import Login from "./pages/login";
 import DashboardPage from "./pages/DashboardPage";
 import PosPage from "./pages/pos/PosPage";
@@ -31,8 +31,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<RegisterPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/" element={<HomePage />} />
         <Route
           path="/login"
           element={
