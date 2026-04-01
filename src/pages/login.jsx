@@ -1,11 +1,11 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { FiAlertTriangle, FiLock, FiLogIn, FiUser } from "react-icons/fi";
 import { useLoginForm } from "./login/hooks/useLoginForm";
+import { useMotionSafe } from "../hooks/useMotionSafe";
 
 const Login = () => {
   const { form, status, canSubmit, onChange, submit } = useLoginForm();
-  const shouldReduceMotion = useReducedMotion();
-  const motionSafe = (props) => (shouldReduceMotion ? {} : props);
+  const motionSafe = useMotionSafe();
 
   return (
     <motion.main

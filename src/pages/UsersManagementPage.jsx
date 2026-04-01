@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   FiLoader,
   FiLock,
@@ -14,6 +14,7 @@ import { useLocation, useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
 import { deleteUser, registerUser, updateUserRole } from "../api/auth";
 import ConfirmActionModal from "../components/common/ConfirmActionModal";
+import { useMotionSafe } from "../hooks/useMotionSafe";
 import { useUsersData } from "./users-management/hooks/useUsersData";
 import { buildUserStats, filterUsers } from "./users-management/utils/metrics";
 
@@ -40,8 +41,7 @@ const UsersManagementPage = () => {
   const [addUserForm, setAddUserForm] = useState(INITIAL_ADD_USER_FORM);
   const [addUserErrors, setAddUserErrors] = useState({});
   const [addUserServerError, setAddUserServerError] = useState("");
-  const shouldReduceMotion = useReducedMotion();
-  const motionSafe = (props) => (shouldReduceMotion ? {} : props);
+  const motionSafe = useMotionSafe();
 
   const handleConfirmAction = async () => {
     if (!confirmState) {

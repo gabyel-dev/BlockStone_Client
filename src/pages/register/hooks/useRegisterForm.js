@@ -49,7 +49,7 @@ export const useRegisterForm = () => {
 
       setStatus({
         loading: false,
-        success: "Account created successfully. You can now sign in.",
+        success: "Account created successfully.",
         server: "",
       });
       setErrors({});

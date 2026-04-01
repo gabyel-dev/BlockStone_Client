@@ -1,12 +1,11 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { FiCheckCircle, FiMinus, FiPlus, FiTrash2 } from "react-icons/fi";
+import { useMotionSafe } from "../../../hooks/useMotionSafe";
+import { formatPesoAmount } from "../../../utils/currency";
 
 const MotionAside = motion.aside;
 const MotionDiv = motion.div;
 const MotionButton = motion.button;
-
-// Formats currency values for consistent ticket display.
-const formatAmount = (amount) => `P${amount.toFixed(2)}`;
 
 // Renders the full order ticket summary and action for order placement.
 const OrderTicketAside = ({
@@ -22,8 +21,7 @@ const OrderTicketAside = ({
   onSubmit,
   isSubmitting,
 }) => {
-  const shouldReduceMotion = useReducedMotion();
-  const motionSafe = (props) => (shouldReduceMotion ? {} : props);
+  const motionSafe = useMotionSafe();
 
   return (
     <MotionAside
@@ -75,7 +73,7 @@ const OrderTicketAside = ({
                         {entry.name}
                       </p>
                       <p className="text-xs text-slate-500">
-                        Fixed {formatAmount(entry.price)}
+                        Fixed {formatPesoAmount(entry.price)}
                         {entry.unit ? ` / ${entry.unit}` : ""}
                       </p>
                     </div>
@@ -112,7 +110,7 @@ const OrderTicketAside = ({
                         Fixed Price
                       </p>
                       <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-900 sm:text-sm">
-                        {formatAmount(effectivePrice)}
+                        {formatPesoAmount(effectivePrice)}
                       </div>
                     </div>
                   </div>
@@ -136,7 +134,7 @@ const OrderTicketAside = ({
                       </button>
                     </div>
                     <p className="text-xs font-black text-slate-900 sm:text-sm">
-                      {formatAmount(lineTotal)}
+                      {formatPesoAmount(lineTotal)}
                     </p>
                   </div>
                 </MotionDiv>
@@ -148,11 +146,11 @@ const OrderTicketAside = ({
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="flex items-center justify-between text-sm text-slate-600">
             <span>Subtotal</span>
-            <span className="font-semibold">{formatAmount(subtotal)}</span>
+            <span className="font-semibold">{formatPesoAmount(subtotal)}</span>
           </p>
           <p className="mt-2 flex items-center justify-between border-t border-slate-200 pt-2 text-base font-black text-slate-900">
             <span>Total</span>
-            <span>{formatAmount(subtotal)}</span>
+            <span>{formatPesoAmount(subtotal)}</span>
           </p>
         </div>
 

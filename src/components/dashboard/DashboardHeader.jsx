@@ -1,5 +1,10 @@
 import { NavLink } from "react-router-dom";
 import { FaPlus } from "react-icons/fa6";
+import {
+  getIsoWeekValueInTimeZone,
+  getMonthValueInTimeZone,
+  isoWeekToDateValue,
+} from "../../utils/timezoneDate";
 
 // Filter buttons shown in dashboard header.
 const periods = [
@@ -8,58 +13,6 @@ const periods = [
   { key: "monthly", label: "Monthly" },
   { key: "yearly", label: "Yearly" },
 ];
-
-const getSafeDate = (value) => {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return new Date();
-  }
-
-  return parsed;
-};
-
-const toIsoDate = (date) => {
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 10);
-};
-
-const getIsoWeekValue = (value) => {
-  const sourceDate = getSafeDate(value);
-  const utcDate = new Date(
-    Date.UTC(
-      sourceDate.getFullYear(),
-      sourceDate.getMonth(),
-      sourceDate.getDate(),
-    ),
-  );
-  const dayNum = utcDate.getUTCDay() || 7;
-
-  utcDate.setUTCDate(utcDate.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil(((utcDate - yearStart) / 86400000 + 1) / 7);
-
-  return `${utcDate.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
-};
-
-const isoWeekToDate = (weekValue) => {
-  const [yearPart, weekPart] = String(weekValue || "").split("-W");
-  const year = Number(yearPart);
-  const week = Number(weekPart);
-
-  if (!year || !week) {
-    return toIsoDate(new Date());
-  }
-
-  const simple = new Date(Date.UTC(year, 0, 1 + (week - 1) * 7));
-  const day = simple.getUTCDay() || 7;
-  const monday = new Date(simple);
-  monday.setUTCDate(simple.getUTCDate() - day + 1);
-
-  return monday.toISOString().slice(0, 10);
-};
-
-const getMonthValue = (value) => toIsoDate(getSafeDate(value)).slice(0, 7);
 
 // Renders top dashboard controls: title, period filter, date picker, and actions.
 const DashboardHeader = ({
@@ -75,7 +28,7 @@ const DashboardHeader = ({
   };
 
   const handleWeekInput = (event) => {
-    onDateChange(isoWeekToDate(event.target.value));
+    onDateChange(isoWeekToDateValue(event.target.value));
   };
 
   const handleMonthInput = (event) => {
@@ -104,7 +57,7 @@ const DashboardHeader = ({
           <div className="mt-2">
             <input
               type="week"
-              value={getIsoWeekValue(referenceDate)}
+              value={getIsoWeekValueInTimeZone(referenceDate)}
               onChange={handleWeekInput}
               className="w-full rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-slate-900 sm:px-3 sm:py-2 sm:text-sm"
             />
@@ -122,7 +75,7 @@ const DashboardHeader = ({
           <div className="mt-2">
             <input
               type="month"
-              value={getMonthValue(referenceDate)}
+              value={getMonthValueInTimeZone(referenceDate)}
               onChange={handleMonthInput}
               className="w-full rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-slate-900 sm:px-3 sm:py-2 sm:text-sm"
             />

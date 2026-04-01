@@ -24,6 +24,9 @@ import {
 const PosPage = () => {
   const location = useLocation();
   const activeMenu = location.state?.menu || "POS";
+  const MotionMain = motion.main;
+  const MotionArticle = motion.article;
+  const MotionButton = motion.button;
 
   const [customerName, setCustomerName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -171,7 +174,7 @@ const PosPage = () => {
   };
 
   return (
-    <motion.main
+    <MotionMain
       className="min-h-screen py-10 text-slate-900 pr-6 pl-6 md:pl-0"
       {...motionSafe({
         initial: { opacity: 0, y: 8 },
@@ -213,7 +216,7 @@ const PosPage = () => {
           ) : null}
 
           {catalog.map((group, groupIndex) => (
-            <motion.article
+            <MotionArticle
               key={group.section}
               {...motionSafe({
                 initial: { opacity: 0, y: 10 },
@@ -233,7 +236,7 @@ const PosPage = () => {
 
               <div className="grid relative gap-2 overflow-hidden sm:grid-cols-2">
                 {group.items.map((item, index) => (
-                  <motion.button
+                  <MotionButton
                     key={`${item.id}-${item.priceOptionId ?? item.name}`}
                     onClick={() => addItem(item)}
                     {...motionSafe({
@@ -273,10 +276,10 @@ const PosPage = () => {
                     >
                       <FiPlus size={14} />
                     </span>
-                  </motion.button>
+                  </MotionButton>
                 ))}
               </div>
-            </motion.article>
+            </MotionArticle>
           ))}
         </div>
 
@@ -294,7 +297,7 @@ const PosPage = () => {
           isSubmitting={isSubmitting}
         />
       </section>
-    </motion.main>
+    </MotionMain>
   );
 };
 

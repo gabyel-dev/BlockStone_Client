@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useLocation, useOutletContext } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   FiCalendar,
   FiChevronLeft,
@@ -9,19 +9,16 @@ import {
   FiShoppingCart,
   FiTrendingUp,
 } from "react-icons/fi";
-import { toast } from "sonner";
-import { useLocation, useOutletContext } from "react-router-dom";
-import { deleteTransaction, getTransactions } from "../api/print";
 import ConfirmActionModal from "../components/common/ConfirmActionModal";
 import TransactionDetailModal from "../components/sales/TransactionDetailModal";
+import { useMotionSafe } from "../hooks/useMotionSafe";
 import { periods, peso } from "./sales/constants";
+import { useSalesPage } from "./sales/hooks/useSalesPage";
 import {
   formatDateTime,
   getIsoWeekValue,
   getMonthValue,
-  isoWeekToDate,
 } from "./sales/utils/dateFilters";
-import { calculateSalesTotals } from "./sales/utils/metrics";
 
 const SummarySkeleton = () => (
   <section className="grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4">
@@ -30,7 +27,7 @@ const SummarySkeleton = () => (
         key={item}
         className="h-24 rounded-2xl border border-slate-200 bg-slate-50 sm:h-28"
       >
-        <div className="h-full w-full animate-pulse rounded-2xl bg-gradient-to-br from-slate-100 via-white to-slate-100" />
+        <div className="h-full w-full animate-pulse rounded-2xl bg-linear-to-br from-slate-100 via-white to-slate-100" />
       </div>
     ))}
   </section>
@@ -57,244 +54,34 @@ const SalesPage = () => {
   const { user } = useOutletContext();
   const location = useLocation();
   const activeMenu = location.state?.menu || "Sales";
-
-  const [period, setPeriod] = useState("daily");
-  const [referenceDate, setReferenceDate] = useState(() =>
-    new Date().toISOString().slice(0, 10),
-  );
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(8);
-  const [sales, setSales] = useState([]);
-  const [meta, setMeta] = useState({
-    page: 1,
-    pageSize: 8,
-    total: 0,
-    totalPages: 1,
-    period: "daily",
-  });
-  const [isLoading, setIsLoading] = useState(true);
-
-  const [error, setError] = useState("");
-
-  const [selectedTransactionId, setSelectedTransactionId] = useState(null);
-  const [transactionToDelete, setTransactionToDelete] = useState(null);
-  const [isDeletingTransaction, setIsDeletingTransaction] = useState(false);
-
-  const lastSeenTransactionId = useRef(null);
-
-  // STEP 1: Build one request function that always sends period/date/page filters.
-  // The backend receives those filters and returns only the matching date window.
-  const fetchSales = useCallback(
-    async ({ silent = false } = {}) => {
-      if (!silent) {
-        setIsLoading(true);
-      }
-
-      try {
-        if (!silent) {
-          setError("");
-        }
-
-        // STEP 2: Send filtered request (period + specific date + pagination).
-        const response = await getTransactions({
-          period,
-          page,
-          pageSize,
-          date: referenceDate,
-        });
-        const transactions = response?.data?.data?.transactions ?? [];
-        const responseMeta = response?.data?.data?.meta;
-
-        // STEP 3: Persist latest result set in state for rendering and metric math.
-        setSales(transactions);
-        setMeta(
-          responseMeta ?? {
-            period,
-            page,
-            pageSize,
-            total: transactions.length,
-            totalPages: 1,
-          },
-        );
-
-        // STEP 4: In silent polling mode, compare latest transaction id to detect new orders.
-        const latestTid = transactions[0]?.tid;
-        if (
-          latestTid &&
-          silent &&
-          lastSeenTransactionId.current &&
-          latestTid !== lastSeenTransactionId.current
-        ) {
-          toast.success(`New order #${latestTid} received.`);
-        }
-        if (latestTid) {
-          lastSeenTransactionId.current = latestTid;
-        }
-      } catch (requestError) {
-        const message =
-          requestError?.response?.data?.message ||
-          "Unable to load sales records right now.";
-        setError(message);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [page, pageSize, period, referenceDate],
-  );
-
-  useEffect(() => {
-    // STEP 5: First load or any filter change triggers a full fetch.
-    fetchSales();
-  }, [fetchSales]);
-
-  useEffect(() => {
-    // STEP 6: Poll every 10s to keep sales feed near real-time.
-    const timer = setInterval(() => {
-      fetchSales({ silent: true });
-    }, 10000);
-
-    return () => {
-      clearInterval(timer);
-    };
-  }, [fetchSales]);
-
-  // STEP 7: Compute review metrics from currently visible rows.
-  // gross: sum(total_amount)
-  // netIncome: sum(net_amount) when backend provides it, else fallback to gross
-  // avg: gross / number of orders
-  const totals = useMemo(() => calculateSalesTotals(sales), [sales]);
-
-  const handleChangePeriod = (nextPeriod) => {
-    setPeriod(nextPeriod);
-    setPage(1);
-  };
-
-  // STEP 8: Weekly picker returns YYYY-Wnn; convert to ISO Monday date for API.
-  const handleWeekInput = (event) => {
-    setReferenceDate(isoWeekToDate(event.target.value));
-    setPage(1);
-  };
-
-  // STEP 9: Monthly picker is normalized to first day of selected month.
-  const handleMonthInput = (event) => {
-    const monthValue = event.target.value;
-    if (!monthValue) {
-      return;
-    }
-
-    setReferenceDate(`${monthValue}-01`);
-    setPage(1);
-  };
-
-  const currentYear = new Date().getFullYear();
-  const yearlyOptions = [currentYear - 2, currentYear - 1, currentYear];
-
-  const renderTimelineControl = () => {
-    if (period === "daily") {
-      return null;
-    }
-
-    if (period === "weekly") {
-      return (
-        <details className="w-full sm:w-auto ">
-          <summary className="cursor-pointer list-none rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-slate-600 sm:text-sm">
-            Weekly Timeline
-          </summary>
-          <div className="mt-2">
-            <input
-              type="week"
-              value={getIsoWeekValue(referenceDate)}
-              onChange={handleWeekInput}
-              className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 outline-none focus:border-slate-900 sm:text-sm"
-            />
-          </div>
-        </details>
-      );
-    }
-
-    if (period === "monthly") {
-      return (
-        <details className="w-full sm:w-auto">
-          <summary className="cursor-pointer list-none rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-slate-600 sm:text-sm">
-            Monthly Timeline
-          </summary>
-          <div className="mt-2">
-            <input
-              type="month"
-              value={getMonthValue(referenceDate)}
-              onChange={handleMonthInput}
-              className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 outline-none focus:border-slate-900 sm:text-sm"
-            />
-          </div>
-        </details>
-      );
-    }
-
-    // after deleting a modal notif is added with 2 option (undo) and delete permanently
-    // if click undo remove timer
-    // if delete permanently, remove the modal and add a toast.error(deleted)
-    // if timer finishes
-    // delete the transaction and toast.error(deleted)
-    const [isTimerStart, setIsTimerStart] = useState(false);
-
-    return (
-      <details className="w-full sm:w-auto">
-        <summary className="cursor-pointer list-none rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-slate-600 sm:text-sm">
-          Yearly Categories
-        </summary>
-        <div className="mt-2 flex flex-wrap gap-1.5 sm:gap-2">
-          {yearlyOptions.map((year) => {
-            const isActiveYear = String(referenceDate || "").startsWith(
-              `${year}-`,
-            );
-
-            return (
-              <button
-                key={year}
-                type="button"
-                onClick={() => {
-                  setReferenceDate(`${year}-01-01`);
-                  setPage(1);
-                }}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition ${
-                  isActiveYear
-                    ? "border-slate-900 bg-slate-900 text-white"
-                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-                }`}
-              >
-                {year}
-              </button>
-            );
-          })}
-        </div>
-      </details>
-    );
-  };
-
-  const shouldReduceMotion = useReducedMotion();
-  const motionSafe = (props) => (shouldReduceMotion ? {} : props);
+  const Motion = motion;
+  const motionSafe = useMotionSafe();
   const isAdmin = String(user?.role || "").toLowerCase() === "admin";
 
-  const handleDeleteTransaction = async () => {
-    if (!transactionToDelete?.tid) {
-      return;
-    }
-
-    try {
-      setIsDeletingTransaction(true);
-      await deleteTransaction(transactionToDelete.tid);
-      setTransactionToDelete(null);
-      toast.success(`Transaction #${transactionToDelete.tid} deleted.`);
-      await fetchSales();
-    } catch (requestError) {
-      toast.error(
-        requestError?.response?.data?.message ||
-          "Unable to delete transaction.",
-      );
-    } finally {
-      setIsDeletingTransaction(false);
-    }
-  };
+  const {
+    period,
+    referenceDate,
+    sales,
+    meta,
+    isLoading,
+    error,
+    selectedTransactionId,
+    transactionToDelete,
+    isDeletingTransaction,
+    totals,
+    yearlyOptions,
+    handleChangePeriod,
+    handleWeekInput,
+    handleMonthInput,
+    handleYearSelect,
+    openTransaction,
+    closeTransaction,
+    openDeletePrompt,
+    closeDeletePrompt,
+    prevPage,
+    nextPage,
+    handleDeleteTransaction,
+  } = useSalesPage({ pageSize: 8 });
 
   return (
     <main className="min-h-screen py-4 text-slate-900 sm:py-7 pr-6 pl-6 md:pl-0">
@@ -315,7 +102,7 @@ const SalesPage = () => {
         </div>
       ) : (
         <section className="mb-4 grid grid-cols-2 gap-2.5 sm:mb-6 sm:gap-4 xl:grid-cols-4">
-          <motion.article
+          <Motion.article
             {...motionSafe({
               initial: { opacity: 0, y: 8 },
               animate: { opacity: 1, y: 0 },
@@ -332,8 +119,9 @@ const SalesPage = () => {
             <p className="mt-1 hidden text-xs text-slate-500 sm:block">
               Visible page total
             </p>
-          </motion.article>
-          <motion.article
+          </Motion.article>
+
+          <Motion.article
             {...motionSafe({
               initial: { opacity: 0, y: 8 },
               animate: { opacity: 1, y: 0 },
@@ -350,8 +138,9 @@ const SalesPage = () => {
             <p className="mt-1 hidden text-xs text-slate-500 sm:block">
               Current page
             </p>
-          </motion.article>
-          <motion.article
+          </Motion.article>
+
+          <Motion.article
             {...motionSafe({
               initial: { opacity: 0, y: 8 },
               animate: { opacity: 1, y: 0 },
@@ -368,8 +157,9 @@ const SalesPage = () => {
             <p className="mt-1 hidden text-xs text-slate-500 sm:block">
               Units on page
             </p>
-          </motion.article>
-          <motion.article
+          </Motion.article>
+
+          <Motion.article
             {...motionSafe({
               initial: { opacity: 0, y: 8 },
               animate: { opacity: 1, y: 0 },
@@ -387,7 +177,7 @@ const SalesPage = () => {
             <p className="mt-1 hidden text-xs text-slate-500 sm:block">
               Per order (page)
             </p>
-          </motion.article>
+          </Motion.article>
         </section>
       )}
 
@@ -399,9 +189,11 @@ const SalesPage = () => {
             <div className="hidden items-center gap-2 rounded-xl bg-slate-50 p-1 sm:flex">
               {periods.map((entry) => {
                 const isActive = period === entry.key;
+
                 return (
                   <button
                     key={entry.key}
+                    type="button"
                     onClick={() => handleChangePeriod(entry.key)}
                     className={`rounded-lg px-3 py-2 text-sm font-bold transition ${
                       isActive
@@ -432,7 +224,63 @@ const SalesPage = () => {
               </select>
             </div>
 
-            {renderTimelineControl()}
+            {period === "weekly" ? (
+              <details className="w-full sm:w-auto">
+                <summary className="cursor-pointer list-none rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-slate-600 sm:text-sm">
+                  Weekly Timeline
+                </summary>
+                <div className="mt-2">
+                  <input
+                    type="week"
+                    value={getIsoWeekValue(referenceDate)}
+                    onChange={handleWeekInput}
+                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 outline-none focus:border-slate-900 sm:text-sm"
+                  />
+                </div>
+              </details>
+            ) : period === "monthly" ? (
+              <details className="w-full sm:w-auto">
+                <summary className="cursor-pointer list-none rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-slate-600 sm:text-sm">
+                  Monthly Timeline
+                </summary>
+                <div className="mt-2">
+                  <input
+                    type="month"
+                    value={getMonthValue(referenceDate)}
+                    onChange={handleMonthInput}
+                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 outline-none focus:border-slate-900 sm:text-sm"
+                  />
+                </div>
+              </details>
+            ) : period === "yearly" ? (
+              <details className="w-full sm:w-auto">
+                <summary className="cursor-pointer list-none rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-slate-600 sm:text-sm">
+                  Yearly Categories
+                </summary>
+                <div className="mt-2 flex flex-wrap gap-1.5 sm:gap-2">
+                  {yearlyOptions.map((year) => {
+                    const isActiveYear = String(referenceDate || "").startsWith(
+                      `${year}-`,
+                    );
+
+                    return (
+                      <button
+                        key={year}
+                        type="button"
+                        onClick={() => handleYearSelect(year)}
+                        className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition ${
+                          isActiveYear
+                            ? "border-slate-900 bg-slate-900 text-white"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                        }`}
+                      >
+                        {year}
+                      </button>
+                    );
+                  })}
+                </div>
+              </details>
+            ) : null}
 
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
               Gross {peso.format(totals.gross)} | Net{" "}
@@ -446,14 +294,14 @@ const SalesPage = () => {
             </div>
           ) : null}
 
-          <div className="space-y-2 md:hidden ">
+          <div className="space-y-2 md:hidden">
             {sales.length === 0 ? (
               <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-5 text-center text-sm font-semibold text-slate-500">
                 No transactions found for this period.
               </div>
             ) : (
               sales.map((transaction, index) => (
-                <motion.article
+                <Motion.article
                   key={transaction.tid}
                   {...motionSafe({
                     initial: { opacity: 0, y: 8 },
@@ -490,16 +338,16 @@ const SalesPage = () => {
                   <div className="mt-3 flex items-end justify-end">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() =>
-                          setSelectedTransactionId(transaction.tid)
-                        }
+                        type="button"
+                        onClick={() => openTransaction(transaction.tid)}
                         className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-900 hover:text-slate-900"
                       >
                         expand
                       </button>
                       {isAdmin ? (
                         <button
-                          onClick={() => setTransactionToDelete(transaction)}
+                          type="button"
+                          onClick={() => openDeletePrompt(transaction)}
                           className="inline-flex items-center gap-1 rounded-lg border border-rose-300 bg-rose-50 px-2 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-rose-700 transition hover:border-rose-400 hover:bg-rose-100"
                         >
                           <FiTrash2 size={12} />
@@ -507,7 +355,7 @@ const SalesPage = () => {
                       ) : null}
                     </div>
                   </div>
-                </motion.article>
+                </Motion.article>
               ))
             )}
           </div>
@@ -537,7 +385,7 @@ const SalesPage = () => {
                 ) : null}
 
                 {sales.map((transaction, index) => (
-                  <motion.tr
+                  <Motion.tr
                     key={transaction.tid}
                     {...motionSafe({
                       initial: { opacity: 0, y: 6 },
@@ -560,23 +408,22 @@ const SalesPage = () => {
                       {transaction.total_qty || 0} pcs (
                       {transaction.item_count || 0} lines)
                     </td>
-
                     <td className="px-3 py-3 text-right font-black text-slate-900">
                       {peso.format(Number(transaction.total_amount ?? 0))}
                     </td>
                     <td className="rounded-r-xl px-3 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() =>
-                            setSelectedTransactionId(transaction.tid)
-                          }
+                          type="button"
+                          onClick={() => openTransaction(transaction.tid)}
                           className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-900 hover:text-slate-900"
                         >
                           expand
                         </button>
                         {isAdmin ? (
                           <button
-                            onClick={() => setTransactionToDelete(transaction)}
+                            type="button"
+                            onClick={() => openDeletePrompt(transaction)}
                             className="inline-flex items-center gap-1 rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-rose-700 transition hover:border-rose-400 hover:bg-rose-100"
                           >
                             <FiTrash2 size={12} />
@@ -584,7 +431,7 @@ const SalesPage = () => {
                         ) : null}
                       </div>
                     </td>
-                  </motion.tr>
+                  </Motion.tr>
                 ))}
               </tbody>
             </table>
@@ -596,16 +443,16 @@ const SalesPage = () => {
             </p>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                type="button"
+                onClick={prevPage}
                 disabled={meta.page <= 1}
                 className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-slate-700 transition enabled:hover:border-slate-900 enabled:hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FiChevronLeft size={14} /> Prev
               </button>
               <button
-                onClick={() =>
-                  setPage((prev) => Math.min(meta.totalPages || 1, prev + 1))
-                }
+                type="button"
+                onClick={nextPage}
                 disabled={meta.page >= meta.totalPages}
                 className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-slate-700 transition enabled:hover:border-slate-900 enabled:hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -618,7 +465,7 @@ const SalesPage = () => {
 
       <TransactionDetailModal
         transactionId={selectedTransactionId}
-        onClose={() => setSelectedTransactionId(null)}
+        onClose={closeTransaction}
       />
 
       <ConfirmActionModal
@@ -628,7 +475,7 @@ const SalesPage = () => {
         confirmLabel="Delete transaction"
         confirmTone="danger"
         isSubmitting={isDeletingTransaction}
-        onCancel={() => setTransactionToDelete(null)}
+        onCancel={closeDeletePrompt}
         onConfirm={handleDeleteTransaction}
       />
     </main>

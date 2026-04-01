@@ -2,26 +2,13 @@ import { useEffect, useState } from "react";
 import { FiX } from "react-icons/fi";
 import { toast } from "sonner";
 import { getTransactionById } from "../../api/print";
+import { formatDateTimeInTimeZone } from "../../utils/timezoneDate";
 
 const peso = new Intl.NumberFormat("en-PH", {
   style: "currency",
   currency: "PHP",
   minimumFractionDigits: 2,
 });
-
-const formatDateTime = (value) => {
-  if (!value) {
-    return "-";
-  }
-
-  return new Date(value).toLocaleString("en-PH", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
 
 const formatUnit = (unitValue) => {
   const normalized = String(unitValue ?? "")
@@ -123,7 +110,9 @@ const TransactionDetailModal = ({ transactionId, onClose }) => {
                   Date
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-800">
-                  {formatDateTime(selectedOrder.transaction.transaction_date)}
+                  {formatDateTimeInTimeZone(
+                    selectedOrder.transaction.transaction_date,
+                  )}
                 </p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">

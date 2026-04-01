@@ -24,6 +24,9 @@ export default function ShiftAgendaModal({
   onDelete,
   isLoading,
 }) {
+  const MotionDiv = motion.div;
+  const MotionButton = motion.button;
+  const MotionArticle = motion.article;
   const [form, setForm] = useState(defaultForm);
   const [editingAgendaId, setEditingAgendaId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,13 +110,13 @@ export default function ShiftAgendaModal({
 
   return (
     <>
-      <motion.div
+      <MotionDiv
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 grid place-items-center bg-slate-950/55 px-4 py-6 backdrop-blur-sm sm:px-6"
       >
-        <motion.div
+        <MotionDiv
           initial={{ y: 24, opacity: 0, scale: 0.98 }}
           animate={{ y: 0, opacity: 1, scale: 1 }}
           transition={{ type: "spring", stiffness: 120, damping: 18 }}
@@ -131,7 +134,7 @@ export default function ShiftAgendaModal({
               </div>
 
               <span className="flex gap-3 pt-4">
-                <motion.button
+                <MotionButton
                   whileHover={{ scale: 1.05, rotate: -3 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={resetForm}
@@ -140,8 +143,8 @@ export default function ShiftAgendaModal({
                   type="button"
                 >
                   <FaPlus className="text-black/70 text-2xl" />
-                </motion.button>
-                <motion.button
+                </MotionButton>
+                <MotionButton
                   whileHover={{ scale: 1.05, rotate: 3 }}
                   whileTap={{ scale: 0.95 }}
                   className="rounded-full border border-slate-200 bg-white/70 p-2 shadow-sm"
@@ -150,7 +153,7 @@ export default function ShiftAgendaModal({
                   disabled
                 >
                   <FaEdit className="text-black/40 text-2xl" />
-                </motion.button>
+                </MotionButton>
               </span>
             </div>
           </div>
@@ -212,7 +215,7 @@ export default function ShiftAgendaModal({
               ) : null}
 
               {agendaData.map((a) => (
-                <motion.article
+                <MotionArticle
                   key={a.aid}
                   initial={{ y: 10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
@@ -248,14 +251,14 @@ export default function ShiftAgendaModal({
                       </button>
                     </div>
                   </div>
-                </motion.article>
+                </MotionArticle>
               ))}
             </section>
           </div>
 
           <div className="sticky bottom-0 border-t border-slate-200 bg-white/95 px-5 py-3 backdrop-blur sm:px-7">
             <div className="flex items-center justify-end gap-2">
-              <motion.button
+              <MotionButton
                 onClick={() => onClose(false)}
                 type="button"
                 className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-600"
@@ -264,8 +267,8 @@ export default function ShiftAgendaModal({
                 disabled={isSubmitting}
               >
                 <FiX size={15} /> Close
-              </motion.button>
-              <motion.button
+              </MotionButton>
+              <MotionButton
                 type="button"
                 className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white"
                 whileHover={{ y: -1, scale: 1.01 }}
@@ -274,11 +277,11 @@ export default function ShiftAgendaModal({
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Saving..." : isEditMode ? "Update" : "Add"}
-              </motion.button>
+              </MotionButton>
             </div>
           </div>
-        </motion.div>
-      </motion.div>
+        </MotionDiv>
+      </MotionDiv>
 
       <ConfirmActionModal
         open={Boolean(deleteCandidate)}
