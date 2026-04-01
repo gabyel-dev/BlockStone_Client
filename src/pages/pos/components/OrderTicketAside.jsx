@@ -27,7 +27,7 @@ const OrderTicketAside = ({
 
   return (
     <MotionAside
-      className="rounded-2xl border border-slate-200 bg-linear-to-b from-white to-slate-50 p-3.5 sm:rounded-[28px] sm:p-5 xl:col-span-5"
+      className="rounded-2xl border relative z-4  border-slate-200  p-3.5 sm:rounded-[28px] sm:p-5 xl:col-span-5"
       {...motionSafe({
         initial: { opacity: 0, y: 8 },
         animate: { opacity: 1, y: 0 },
