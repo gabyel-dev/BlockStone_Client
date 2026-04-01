@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   MdAttachMoney,
   MdDashboard,
@@ -15,9 +15,12 @@ import LogoutModal from "./logoutModal";
 
 const SidePanel = ({ user }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isInventoryMenuOpen, setIsInventoryMenuOpen] = useState(false);
+  const [isInventoryMenuPinned, setIsInventoryMenuPinned] = useState(false);
   const profileMenuRef = useRef(null);
 
   const navItems = [
@@ -25,12 +28,47 @@ const SidePanel = ({ user }) => {
     { name: "POS", path: "/pos", icon: <MdPrint size={20} /> },
     { name: "Sales", path: "/sales", icon: <MdAttachMoney size={20} /> },
     { name: "Users Management", path: "/users", icon: <FaUsers size={20} /> },
-    { name: "Inventory", path: "/inventory", icon: <MdInventory size={20} /> },
   ];
 
-  const mobileNavItems = navItems.filter(
-    (item) => item.name !== "Users Management",
-  );
+  const inventorySubItems = [
+    {
+      name: "Stocks",
+      path: "/inventory",
+      state: { menu: "Inventory", inventoryView: "Stocks" },
+    },
+    {
+      name: "Services",
+      path: "/inventory",
+      state: { menu: "Inventory", inventoryView: "Services" },
+    },
+  ];
+
+  const isInventoryRoute = location.pathname === "/inventory";
+  const activeInventoryView = String(location.state?.inventoryView || "Stocks");
+  const isStocksActive = isInventoryRoute && activeInventoryView !== "Services";
+  const isServicesActive =
+    isInventoryRoute && activeInventoryView === "Services";
+  const isInventoryActive = isStocksActive || isServicesActive;
+
+  const mobileNavItems = [
+    ...navItems.filter((item) => item.name !== "Users Management"),
+    {
+      name: "Inventory",
+      path: "/inventory",
+      icon: <MdInventory size={20} />,
+    },
+  ];
+
+  useEffect(() => {
+    if (isInventoryRoute) {
+      setIsInventoryMenuOpen(true);
+      setIsInventoryMenuPinned(true);
+      return;
+    }
+
+    setIsInventoryMenuOpen(false);
+    setIsInventoryMenuPinned(false);
+  }, [isInventoryRoute]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -145,6 +183,78 @@ const SidePanel = ({ user }) => {
                   )}
                 </NavLink>
               ))}
+
+              <div
+                className="mt-2"
+                onMouseEnter={() => setIsInventoryMenuOpen(true)}
+                onMouseLeave={() => {
+                  if (!isInventoryMenuPinned) {
+                    setIsInventoryMenuOpen(false);
+                  }
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isInventoryMenuPinned) {
+                      setIsInventoryMenuPinned(false);
+                      setIsInventoryMenuOpen(false);
+                      return;
+                    }
+
+                    setIsInventoryMenuPinned(true);
+                    setIsInventoryMenuOpen(true);
+                  }}
+                  className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition-all duration-150 ${
+                    isInventoryActive
+                      ? "bg-slate-900 text-white shadow-[0_12px_22px_-16px_rgba(15,23,42,0.9)]"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
+                >
+                  <span
+                    className={`grid h-8 w-8 place-items-center rounded-lg transition ${
+                      isInventoryActive
+                        ? "bg-white/20 text-white"
+                        : "bg-slate-100 text-slate-500 group-hover:bg-white"
+                    }`}
+                  >
+                    <MdInventory size={20} />
+                  </span>
+                  <span className="truncate">Inventory</span>
+                  <MdKeyboardArrowUp
+                    size={16}
+                    className={`ml-auto transition ${
+                      isInventoryMenuOpen ? "rotate-0" : "rotate-180"
+                    }`}
+                  />
+                </button>
+
+                {isInventoryMenuOpen ? (
+                  <div className="mt-1 ml-10 grid gap-1">
+                    {inventorySubItems.map((subItem) => {
+                      const isSubActive =
+                        subItem.name === "Stocks"
+                          ? isStocksActive
+                          : isServicesActive;
+
+                      return (
+                        <NavLink
+                          key={subItem.name}
+                          to={subItem.path}
+                          state={subItem.state}
+                          className={`rounded-lg px-3 py-2 text-xs font-semibold tracking-[0.02em] transition ${
+                            isSubActive
+                              ? "bg-slate-900 text-white"
+                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                          }`}
+                        >
+                          {subItem.name}
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
             </nav>
           </div>
 
@@ -153,12 +263,32 @@ const SidePanel = ({ user }) => {
               Workspace
             </p>
 
-            <button className="mb-1.5 cursor-pointer  flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-slate-100 text-slate-500">
-                <MdSettings size={18} />
-              </span>
-              Settings
-            </button>
+            <NavLink
+              to="/settings"
+              state={{ menu: "Settings" }}
+              className={({ isActive }) =>
+                `mb-1.5 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${
+                  isActive
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <span
+                    className={`grid h-8 w-8 place-items-center rounded-lg ${
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    <MdSettings size={18} />
+                  </span>
+                  Settings
+                </>
+              )}
+            </NavLink>
 
             <button
               onClick={() => setIsOpen(true)}
@@ -245,6 +375,7 @@ const SidePanel = ({ user }) => {
                   type="button"
                   onClick={() => {
                     setIsProfileMenuOpen(false);
+                    navigate("/settings", { state: { menu: "Settings" } });
                   }}
                   className="mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
                 >

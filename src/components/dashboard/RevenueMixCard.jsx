@@ -3,13 +3,28 @@ import { FiLayers } from "react-icons/fi";
 
 const palette = ["#0f172a", "#2563eb", "#22c55e", "#f59e0b", "#ef4444"];
 
+const mixColorMap = {
+  photocopy: "#2563eb", // blue
+  finishing: "#ef4444", // red
+  print: "#22c55e", // green
+  scanning: "#9ca3af", // gray
+};
+
+const getMixColor = (label, fallbackIndex) => {
+  const key = String(label || "")
+    .trim()
+    .toLowerCase();
+
+  return mixColorMap[key] || palette[fallbackIndex % palette.length];
+};
+
 const RevenueMixCard = ({ mixData }) => {
   const normalizedMix = (Array.isArray(mixData) ? mixData : []).map(
     (item, index) => ({
       id: index,
       value: Number(item.value ?? 0),
       label: item.label,
-      color: palette[index % palette.length],
+      color: getMixColor(item.label, index),
     }),
   );
 

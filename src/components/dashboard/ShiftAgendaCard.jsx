@@ -14,7 +14,7 @@ const ShiftAgendaCard = ({ setClose, agendaData }) => {
           Shift Agenda
         </h3>
         <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
-          All
+          Expand to view all
         </span>
       </div>
 

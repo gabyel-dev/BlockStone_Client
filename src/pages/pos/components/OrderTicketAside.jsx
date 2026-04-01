@@ -1,6 +1,10 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { FiCheckCircle, FiMinus, FiPlus, FiTrash2 } from "react-icons/fi";
 
+const MotionAside = motion.aside;
+const MotionDiv = motion.div;
+const MotionButton = motion.button;
+
 // Formats currency values for consistent ticket display.
 const formatAmount = (amount) => `P${amount.toFixed(2)}`;
 
@@ -22,7 +26,7 @@ const OrderTicketAside = ({
   const motionSafe = (props) => (shouldReduceMotion ? {} : props);
 
   return (
-    <motion.aside
+    <MotionAside
       className="rounded-2xl border border-slate-200 bg-linear-to-b from-white to-slate-50 p-3.5 sm:rounded-[28px] sm:p-5 xl:col-span-5"
       {...motionSafe({
         initial: { opacity: 0, y: 8 },
@@ -57,7 +61,7 @@ const OrderTicketAside = ({
               const lineTotal = effectivePrice * entry.qty;
 
               return (
-                <motion.div
+                <MotionDiv
                   key={entry.id}
                   {...motionSafe({
                     initial: { opacity: 0, y: 6 },
@@ -135,7 +139,7 @@ const OrderTicketAside = ({
                       {formatAmount(lineTotal)}
                     </p>
                   </div>
-                </motion.div>
+                </MotionDiv>
               );
             })
           )}
@@ -153,17 +157,27 @@ const OrderTicketAside = ({
         </div>
 
         <div>
-          <motion.button
+          <MotionButton
             onClick={onSubmit}
             {...motionSafe({
               whileHover: { y: -1, scale: 1.01 },
               whileTap: { scale: 0.98 },
             })}
             disabled={isSubmitting}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700 sm:py-3"
+            className={`flex w-full items-center justify-center gap-2 rounded-xl ${isSubmitting ? "bg-slate-500 cursor-not-allowed" : "bg-slate-900 hover:bg-slate-700 cursor-pointer"} px-4 py-2.5 text-sm font-bold text-white transition  sm:py-3`}
           >
-            <FiCheckCircle size={16} /> Place Order
-          </motion.button>
+            {isSubmitting ? (
+              <>
+                <span className="w-5 h-5 rounded-full border-2 border-b-white border-t-white border-transparent animate-spin"></span>
+                Placing order...
+              </>
+            ) : (
+              <>
+                <FiCheckCircle size={16} />
+                <span>Place Order</span>
+              </>
+            )}
+          </MotionButton>
         </div>
 
         {notice ? (
@@ -172,7 +186,7 @@ const OrderTicketAside = ({
           </p>
         ) : null}
       </div>
-    </motion.aside>
+    </MotionAside>
   );
 };
 

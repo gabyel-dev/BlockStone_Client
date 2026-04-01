@@ -41,7 +41,7 @@ const CategoryIncomeChartCard = ({ mixData }) => {
               },
             ]}
             height={220}
-            margin={{ left: 40, right: 12, top: 18, bottom: 48 }}
+            margin={{ left: 0, right: 12, top: 18, bottom: 48 }}
             grid={{ horizontal: true }}
           />
         </div>

@@ -6,6 +6,7 @@ import PosPage from "./pages/pos/PosPage";
 import SalesPage from "./pages/SalesPage";
 import UsersManagementPage from "./pages/UsersManagementPage";
 import InventoryPage from "./pages/InventoryPage";
+import SettingsPage from "./pages/SettingsPage";
 import MainLayout from "./pages/MainLayout";
 import { GuestOnly, RequireAuth } from "./context/authContext";
 
@@ -52,6 +53,7 @@ const App = () => {
           <Route path="/sales" element={<SalesPage />} />
           <Route path="/users" element={<UsersManagementPage />} />
           <Route path="/inventory" element={<InventoryPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
         <Route path="/data/:id" element={<DataPlaceholder />} />
       </Routes>

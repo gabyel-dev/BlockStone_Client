@@ -2,6 +2,11 @@ import { api } from "./axios";
 
 export const getPrintServices = () => api.get("/print/services");
 
+export const getServiceCatalog = () => api.get("/print/services/catalog");
+
+export const updateServicePricing = ({ priceOptionId, payload }) =>
+  api.patch(`/print/services/options/${priceOptionId}`, payload);
+
 export const createTransaction = (payload) =>
   api.post("/print/transactions", payload);
 
