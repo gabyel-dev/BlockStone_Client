@@ -112,9 +112,7 @@ const ServiceDetailModal = ({
             </label>
 
             <label className="grid gap-1 text-sm">
-              <span className="font-semibold text-slate-700">
-                Cost of goods
-              </span>
+              <span className="font-semibold text-slate-700">Total Cost</span>
               <input
                 type="number"
                 min={0}
@@ -558,7 +556,7 @@ const InventoryPage = () => {
                 <th className="px-2 py-2">Service</th>
                 <th className="px-2 py-2">Option</th>
                 <th className="px-2 py-2">Price</th>
-                <th className="px-2 py-2">Cost of Goods</th>
+                <th className="px-2 py-2">Total Cost</th>
                 <th className="px-2 py-2">Actions</th>
               </tr>
             </thead>

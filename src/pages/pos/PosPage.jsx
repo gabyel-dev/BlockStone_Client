@@ -192,7 +192,7 @@ const PosPage = () => {
       <img
         src="/logo.png"
         alt="logo"
-        className="absolute right-1/4 top-1/3 bg-no-repeat scale-150 opacity-3"
+        className="absolute right-1/4 top-1/3  scale-150 opacity-3"
       />
 
       <section className="grid overflow-hidden gap-4 sm:gap-6 xl:grid-cols-12">
