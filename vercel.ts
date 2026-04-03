@@ -5,7 +5,7 @@ const apiOriginRaw =
 const apiOrigin = apiOriginRaw.replace(/\/+$/, "");
 const apiDestination = `${apiOrigin}/api/:path*`;
 
-export default {
+export const config = {
   rewrites: [
     {
       source: "/api/:path*",
