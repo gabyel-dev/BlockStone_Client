@@ -5,7 +5,8 @@ import {
   parseAiPulseFromText,
 } from "../../../utils/dashboardAssistant";
 
-const PULSE_REFRESH_MS = 60000;
+const PULSE_REFRESH_MS =
+  Number(import.meta.env.VITE_AI_PULSE_REFRESH_MS) || 3 * 60 * 1000;
 const CHALLENGE_BACKOFF_MS = 10 * 60 * 1000;
 
 const extractText = (payload) => {

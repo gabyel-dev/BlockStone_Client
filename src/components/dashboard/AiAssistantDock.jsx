@@ -11,6 +11,8 @@ import {
 const CHAT_STORAGE_KEY = "blockstone.ai.assistant.chat.v1";
 const DOCK_POSITION_STORAGE_KEY = "blockstone.ai.assistant.dock-position.v1";
 const ONE_HOUR_MS = 60 * 60 * 1000;
+const CHAT_COOLDOWN_MS =
+  Number(import.meta.env.VITE_AI_CHAT_COOLDOWN_MS) || 60000;
 const DOCK_MARGIN = 12;
 const DEFAULT_DOCK_SIZE = {
   width: 120,
@@ -193,6 +195,8 @@ const AiAssistantDock = ({ context, aiPulse }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [cooldownRemainingSec, setCooldownRemainingSec] = useState(0);
   const [dockPosition, setDockPosition] = useState(() => readDockPosition());
   const [isDraggingDock, setIsDraggingDock] = useState(false);
   const [messages, setMessages] = useState(() => {
@@ -224,6 +228,7 @@ const AiAssistantDock = ({ context, aiPulse }) => {
   });
   const preventToggleAfterDragRef = useRef(false);
   const recommendations = useMemo(() => getAssistantRecommendations(), []);
+  const isCooldownActive = cooldownRemainingSec > 0;
 
   useEffect(() => {
     saveMessages(messages);
@@ -277,6 +282,24 @@ const AiAssistantDock = ({ context, aiPulse }) => {
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (!cooldownUntil) {
+      setCooldownRemainingSec(0);
+      return;
+    }
+
+    const updateCooldown = () => {
+      const remainingMs = Math.max(0, cooldownUntil - Date.now());
+      const remainingSec = Math.ceil(remainingMs / 1000);
+      setCooldownRemainingSec(remainingSec);
+    };
+
+    updateCooldown();
+    const timer = setInterval(updateCooldown, 1000);
+
+    return () => clearInterval(timer);
+  }, [cooldownUntil]);
 
   const handleDockToggle = () => {
     if (preventToggleAfterDragRef.current) {
@@ -401,9 +424,17 @@ const AiAssistantDock = ({ context, aiPulse }) => {
       return;
     }
 
+    if (isCooldownActive) {
+      pushAssistantMessage(
+        `Please wait ${cooldownRemainingSec}s before sending another AI request to avoid limits.`,
+      );
+      return;
+    }
+
     pushUserMessage(text);
     setInput("");
     setIsThinking(true);
+    setCooldownUntil(Date.now() + CHAT_COOLDOWN_MS);
 
     try {
       let todaySales = null;
@@ -522,6 +553,7 @@ const AiAssistantDock = ({ context, aiPulse }) => {
                     key={item}
                     type="button"
                     onClick={() => handleAsk(item)}
+                    disabled={isThinking || isCooldownActive}
                     className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
                   >
                     {item}
@@ -559,18 +591,29 @@ const AiAssistantDock = ({ context, aiPulse }) => {
                 <input
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
-                  placeholder="Ask about sales, stock, improvements..."
+                  placeholder={
+                    isCooldownActive
+                      ? `Cooldown active: ${cooldownRemainingSec}s`
+                      : "Ask about sales, stock, improvements..."
+                  }
                   className="h-11 flex-1 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-slate-900"
                 />
                 <button
                   type="submit"
-                  disabled={!input.trim() || isThinking}
+                  disabled={!input.trim() || isThinking || isCooldownActive}
                   className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
                   aria-label="Send message"
                 >
                   <FiSend size={15} />
                 </button>
               </form>
+
+              {isCooldownActive ? (
+                <p className="mt-2 text-xs text-amber-600">
+                  AI request cooldown is active. Try again in{" "}
+                  {cooldownRemainingSec}s.
+                </p>
+              ) : null}
 
               <button
                 type="button"
