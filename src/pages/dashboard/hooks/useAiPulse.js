@@ -8,6 +8,11 @@ import {
 const PULSE_REFRESH_MS =
   Number(import.meta.env.VITE_AI_PULSE_REFRESH_MS) || 3 * 60 * 1000;
 const CHALLENGE_BACKOFF_MS = 10 * 60 * 1000;
+const INITIAL_PULSE_DELAY_MS =
+  Number(import.meta.env.VITE_AI_PULSE_INITIAL_DELAY_MS) || 60 * 1000;
+const PULSE_CACHE_STORAGE_KEY = "blockstone.ai.pulse.cache.v1";
+const PULSE_CACHE_TTL_MS =
+  Number(import.meta.env.VITE_AI_PULSE_CACHE_TTL_MS) || PULSE_REFRESH_MS;
 
 const extractText = (payload) => {
   if (!payload) {
@@ -38,6 +43,60 @@ const buildPulsePrompt = ({ period, referenceDate }) =>
     "No markdown. No code fences. No extra keys.",
   ].join(" ");
 
+const makeCacheKey = ({ period, referenceDate }) =>
+  `${String(period || "daily")}:${String(referenceDate || "")}`;
+
+const readPulseCache = (cacheKey) => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.sessionStorage.getItem(PULSE_CACHE_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw);
+    const entry = parsed?.[cacheKey];
+    if (!entry) {
+      return null;
+    }
+
+    const expiresAt = Number(entry?.expiresAt || 0);
+    if (!expiresAt || expiresAt <= Date.now()) {
+      return null;
+    }
+
+    return entry?.pulse || null;
+  } catch {
+    return null;
+  }
+};
+
+const writePulseCache = (cacheKey, pulse) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    const raw = window.sessionStorage.getItem(PULSE_CACHE_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+
+    parsed[cacheKey] = {
+      pulse,
+      expiresAt: Date.now() + PULSE_CACHE_TTL_MS,
+    };
+
+    window.sessionStorage.setItem(
+      PULSE_CACHE_STORAGE_KEY,
+      JSON.stringify(parsed),
+    );
+  } catch {
+    // Ignore cache write errors.
+  }
+};
+
 export const useAiPulse = ({
   enabled = true,
   summary,
@@ -65,10 +124,10 @@ export const useAiPulse = ({
   const [isRefreshingPulse, setIsRefreshingPulse] = useState(false);
   const latestContextRef = useRef(null);
   const blockedUntilRef = useRef(0);
-
-  useEffect(() => {
-    setAiPulse(fallbackPulse);
-  }, [fallbackPulse]);
+  const cacheKey = useMemo(
+    () => makeCacheKey({ period, referenceDate }),
+    [period, referenceDate],
+  );
 
   latestContextRef.current = {
     summary,
@@ -89,7 +148,16 @@ export const useAiPulse = ({
       return;
     }
 
+    const cachedPulse = readPulseCache(cacheKey);
+    if (cachedPulse) {
+      setAiPulse(cachedPulse);
+    }
+
+    setAiPulse((current) => current || fallbackPulse);
+
     let isMounted = true;
+    let initialTimer;
+    let refreshTimer;
 
     const refreshPulse = async () => {
       const context = latestContextRef.current;
@@ -119,6 +187,7 @@ export const useAiPulse = ({
 
         if (isMounted && parsed) {
           setAiPulse(parsed);
+          writePulseCache(cacheKey, parsed);
         }
       } catch (error) {
         const providerCode = error?.response?.data?.code;
@@ -143,14 +212,18 @@ export const useAiPulse = ({
       }
     };
 
-    refreshPulse();
-    const timer = setInterval(refreshPulse, PULSE_REFRESH_MS);
+    initialTimer = setTimeout(() => {
+      refreshPulse();
+    }, INITIAL_PULSE_DELAY_MS);
+
+    refreshTimer = setInterval(refreshPulse, PULSE_REFRESH_MS);
 
     return () => {
       isMounted = false;
-      clearInterval(timer);
+      clearTimeout(initialTimer);
+      clearInterval(refreshTimer);
     };
-  }, [enabled, fallbackPulse, period, referenceDate]);
+  }, [enabled, fallbackPulse, cacheKey]);
 
   return {
     aiPulse,
