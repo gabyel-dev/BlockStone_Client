@@ -113,10 +113,15 @@ export const useAiPulse = ({
           setAiPulse(parsed);
         }
       } catch (error) {
-        const isProviderChallenge =
-          error?.response?.data?.code === "AI_PROVIDER_CHALLENGE";
+        const providerCode = error?.response?.data?.code;
+        const status = Number(error?.response?.status || 0);
+        const shouldBackoff =
+          providerCode === "AI_PROVIDER_CHALLENGE" ||
+          providerCode === "AI_PROVIDER_FORBIDDEN" ||
+          status === 403 ||
+          status === 503;
 
-        if (isProviderChallenge) {
+        if (shouldBackoff) {
           blockedUntilRef.current = Date.now() + CHALLENGE_BACKOFF_MS;
         }
 
