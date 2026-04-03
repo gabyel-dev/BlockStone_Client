@@ -1,4 +1,4 @@
-const server = process.env.VITE_BACKEND_URL;
+const server = process.env.VITE_API_BASE_URL;
 
 export const config = {
   rewrites: [
