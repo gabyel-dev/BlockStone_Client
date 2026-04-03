@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FiCpu, FiSend, FiTrash2, FiX, FiZap } from "react-icons/fi";
+import { FiCpu, FiLoader, FiSend, FiTrash2, FiX, FiZap } from "react-icons/fi";
 import { askAiAssistant } from "../../api/ai";
 import { getDashboard } from "../../api/auth";
 import { getTodayDateValue } from "../../utils/timezoneDate";
@@ -189,6 +189,91 @@ const extractResponseMessage = (payload) => {
   );
 };
 
+const renderHighlightedText = (text, keyPrefix) => {
+  const value = String(text || "");
+  const matches = [
+    ...value.matchAll(
+      /(\d+(?:\.\d+)?%|\b(?:critical|urgent|warning|risk|profit|loss|revenue|sales|stock|increase|decrease|today)\b)/gi,
+    ),
+  ];
+
+  if (matches.length === 0) {
+    return value;
+  }
+
+  const nodes = [];
+  let cursor = 0;
+
+  matches.forEach((match, index) => {
+    const start = Number(match.index || 0);
+    const end = start + match[0].length;
+
+    if (start > cursor) {
+      nodes.push(value.slice(cursor, start));
+    }
+
+    nodes.push(
+      <span
+        key={`${keyPrefix}-highlight-${index}`}
+        className="rounded bg-amber-100 px-1 font-semibold text-amber-800"
+      >
+        {match[0]}
+      </span>,
+    );
+
+    cursor = end;
+  });
+
+  if (cursor < value.length) {
+    nodes.push(value.slice(cursor));
+  }
+
+  return nodes;
+};
+
+const renderAssistantInline = (text, keyPrefix) => {
+  const value = String(text || "");
+  const pattern = /(\*\*[^*]+\*\*|\*[^*]+\*)/g;
+  const parts = value.split(pattern).filter((part) => part.length > 0);
+
+  return parts.map((part, index) => {
+    const key = `${keyPrefix}-part-${index}`;
+
+    if (/^\*\*[^*]+\*\*$/.test(part)) {
+      const content = part.slice(2, -2);
+      return (
+        <strong key={key} className="font-bold text-slate-900">
+          {renderHighlightedText(content, `${key}-bold`)}
+        </strong>
+      );
+    }
+
+    if (/^\*[^*]+\*$/.test(part)) {
+      const content = part.slice(1, -1);
+      return (
+        <em key={key} className="italic text-slate-700">
+          {renderHighlightedText(content, `${key}-italic`)}
+        </em>
+      );
+    }
+
+    return <span key={key}>{renderHighlightedText(part, `${key}-plain`)}</span>;
+  });
+};
+
+const renderAssistantMessage = (content, keyPrefix) => {
+  const lines = String(content || "").split("\n");
+
+  return lines.map((line, index) => (
+    <p
+      key={`${keyPrefix}-line-${index}`}
+      className={index > 0 ? "mt-1" : undefined}
+    >
+      {renderAssistantInline(line, `${keyPrefix}-line-${index}`)}
+    </p>
+  ));
+};
+
 const AiAssistantDock = ({ context, aiPulse }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -223,7 +308,10 @@ const AiAssistantDock = ({ context, aiPulse }) => {
     moved: false,
   });
   const preventToggleAfterDragRef = useRef(false);
-  const recommendations = useMemo(() => getAssistantRecommendations(), []);
+  const recommendations = useMemo(() => {
+    const items = getAssistantRecommendations();
+    return items.slice(0, Math.max(0, items.length - 2));
+  }, []);
 
   useEffect(() => {
     saveMessages(messages);
@@ -540,17 +628,29 @@ const AiAssistantDock = ({ context, aiPulse }) => {
                   key={message.id}
                   className={`max-w-[92%] rounded-2xl px-3 py-2.5 text-sm leading-relaxed shadow-sm ${
                     message.role === "assistant"
-                      ? "border border-slate-200 bg-white text-slate-700"
+                      ? "border border-amber-200 bg-gradient-to-br from-white via-amber-50/40 to-white text-slate-700"
                       : "ml-auto bg-slate-900 text-white"
                   }`}
                 >
-                  <p className="whitespace-pre-line">{message.content}</p>
+                  {message.role === "assistant" ? (
+                    <div>
+                      {renderAssistantMessage(message.content, message.id)}
+                    </div>
+                  ) : (
+                    <p className="whitespace-pre-line">{message.content}</p>
+                  )}
                 </article>
               ))}
 
               {isThinking ? (
                 <article className="max-w-[92%] rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-500 shadow-sm">
-                  Analyzing live signals...
+                  <div className="flex items-center gap-2">
+                    <FiLoader
+                      className="animate-spin text-slate-500"
+                      size={14}
+                    />
+                    <span className="italic">Analyzing live signals...</span>
+                  </div>
                 </article>
               ) : null}
             </div>
