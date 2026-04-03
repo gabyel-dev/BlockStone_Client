@@ -6,6 +6,7 @@ import {
 } from "../../../utils/dashboardAssistant";
 
 const PULSE_REFRESH_MS = 60000;
+const CHALLENGE_BACKOFF_MS = 10 * 60 * 1000;
 
 const extractText = (payload) => {
   if (!payload) {
@@ -61,6 +62,7 @@ export const useAiPulse = ({
   const [aiPulse, setAiPulse] = useState(fallbackPulse);
   const [isRefreshingPulse, setIsRefreshingPulse] = useState(false);
   const latestContextRef = useRef(null);
+  const blockedUntilRef = useRef(0);
 
   useEffect(() => {
     setAiPulse(fallbackPulse);
@@ -87,6 +89,12 @@ export const useAiPulse = ({
         return;
       }
 
+      const now = Date.now();
+      if (blockedUntilRef.current && now < blockedUntilRef.current) {
+        setAiPulse(context.fallbackPulse);
+        return;
+      }
+
       setIsRefreshingPulse(true);
 
       try {
@@ -104,7 +112,14 @@ export const useAiPulse = ({
         if (isMounted && parsed) {
           setAiPulse(parsed);
         }
-      } catch {
+      } catch (error) {
+        const isProviderChallenge =
+          error?.response?.data?.code === "AI_PROVIDER_CHALLENGE";
+
+        if (isProviderChallenge) {
+          blockedUntilRef.current = Date.now() + CHALLENGE_BACKOFF_MS;
+        }
+
         if (isMounted) {
           setAiPulse(context.fallbackPulse);
         }
