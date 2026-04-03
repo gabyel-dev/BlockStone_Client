@@ -1,14 +1,11 @@
 const server =
-  process.env.BACKEND_ORIGIN ||
-  process.env.VITE_API_BASE_URL ||
-  "https://blockstone-server.onrender.com";
-const normalizedServer = server.replace(/\/+$/, "");
+  import.meta.env.VITE_API_BASE_URL || "https://blockstone-server.onrender.com";
 
 export const config = {
   rewrites: [
     {
       source: "/api/:path*",
-      destination: `${normalizedServer}/api/:path*`,
+      destination: `${server}`,
     },
     {
       source: "/(.*)",
