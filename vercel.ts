@@ -1,11 +1,15 @@
-const apiOriginRaw = process.env.VITE_BACKEND_ORIGIN;
-const apiOrigin = apiOriginRaw?.replace(/\/+$/, "");
+const apiOriginRaw =
+  process.env.BACKEND_ORIGIN ||
+  process.env.VITE_BACKEND_ORIGIN ||
+  "https://blockstone-server.onrender.com";
+const apiOrigin = apiOriginRaw.replace(/\/+$/, "");
+const apiDestination = `${apiOrigin}/api/:path*`;
 
 export default {
   rewrites: [
     {
       source: "/api/:path*",
-      destination: `${apiOrigin}/api/:path*`,
+      destination: apiDestination,
     },
     {
       source: "/(.*)",
