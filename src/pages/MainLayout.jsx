@@ -28,6 +28,11 @@ const MainLayout = () => {
       <div className="flex gap-4 lg:gap-6">
         <SidePanel user={authUser} />
         <section className="w-full text-[15px] leading-relaxed lg:text-base">
+          {/*
+            Outlet is the placeholder for the active child route (/dashboard, /users, etc.).
+            React Router swaps only this section when the route changes, so the layout stays mounted.
+            Because navigation is handled client-side, the app updates view state without a hard reload.
+          */}
           <Outlet context={{ user: authUser }} />
         </section>
       </div>

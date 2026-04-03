@@ -10,7 +10,7 @@ import {
   FiUser,
   FiUsers,
 } from "react-icons/fi";
-import { useLocation, useOutletContext } from "react-router-dom";
+import { Link, useLocation, useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
 import { deleteUser, registerUser, updateUserRole } from "../api/auth";
 import ConfirmActionModal from "../components/common/ConfirmActionModal";
@@ -36,6 +36,8 @@ const UsersManagementPage = () => {
   const { users, loading, error, reloadUsers } = useUsersData();
   const isCurrentUserAdmin =
     String(currentUser?.role || "").toLowerCase() === "admin";
+  const isCurrentUserBasicUser =
+    String(currentUser?.role || "").toLowerCase() === "user";
   const { isUserOnline, onlineCount } = useOnlineUsers({
     enabled: isCurrentUserAdmin,
   });
@@ -302,23 +304,29 @@ const UsersManagementPage = () => {
       <section className="mt-6 rounded-[30px] border border-slate-200 bg-white p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-xl font-black text-slate-900">User Directory</h3>
-          <button
-            type="button"
-            onClick={onOpenAddUserModal}
-            className="hidden md:inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-slate-700"
-          >
-            <FiPlus size={14} />
-            Add User
-          </button>
+          {!isCurrentUserBasicUser ? (
+            <button
+              type="button"
+              onClick={onOpenAddUserModal}
+              className="hidden md:inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-slate-700"
+            >
+              <FiPlus size={14} />
+              Add User
+            </button>
+          ) : null}
         </div>
 
-        {error ? (
+        {isCurrentUserBasicUser ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm font-semibold text-amber-800">
+            Role User cannot see users list. try contact admin
+          </div>
+        ) : error ? (
           <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
             {error}
           </div>
         ) : null}
 
-        {loading ? (
+        {isCurrentUserBasicUser ? null : loading ? (
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-8 text-sm text-slate-600">
             <div className="flex items-center gap-2">
               <FiLoader className="animate-spin" size={16} />
@@ -387,6 +395,12 @@ const UsersManagementPage = () => {
                       </span>
 
                       <div className="flex items-center gap-1">
+                        <Link
+                          to={`/users/${entry.id}`}
+                          className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-bold text-slate-700 transition hover:border-slate-900 hover:text-slate-900"
+                        >
+                          View
+                        </Link>
                         <button
                           type="button"
                           onClick={() =>
@@ -612,6 +626,7 @@ const UsersManagementPage = () => {
         type="button"
         onClick={onOpenAddUserModal}
         className="fixed bottom-24 right-4 z-30 grid h-12 w-12 place-items-center rounded-full bg-slate-900 text-white shadow-[0_14px_30px_-16px_rgba(15,23,42,0.65)] transition hover:bg-slate-700 md:hidden"
+        hidden={isCurrentUserBasicUser}
         aria-label="Add user"
       >
         <FiPlus size={20} />

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import AiAssistantDock from "../components/dashboard/AiAssistantDock";
 import CategoryIncomeChartCard from "../components/dashboard/CategoryIncomeChartCard";
 import DashboardHeader from "../components/dashboard/DashboardHeader";
 import PulseSection from "../components/dashboard/PulseSection";
@@ -10,6 +11,7 @@ import ThroughputChartCard from "../components/dashboard/ThroughputChartCard";
 import DashboardSkeleton from "../components/skeletons/dashboard/DashboardSkeleton";
 import ShiftAgendaModal from "../components/Agendas/shiftAgenda";
 import { useInventoryData } from "../hooks/useInventoryData";
+import { useAiPulse } from "./dashboard/hooks/useAiPulse";
 import { useDashboardData } from "./dashboard/hooks/useDashboardData";
 import { useShiftAgendaData } from "./dashboard/hooks/useShiftAgendaData";
 
@@ -32,6 +34,53 @@ const DashboardPage = () => {
   const { agendaData, addAgenda, editAgenda, removeAgenda, isAgendaLoading } =
     useShiftAgendaData();
 
+  const inventorySnapshot = useMemo(
+    () => ({
+      criticalCount: Number(inventoryMetrics.criticalItems ?? 0),
+      criticalPercentage: Number(inventoryMetrics.criticalPercentage ?? 0),
+      totalItems: Number(inventoryMetrics.totalItems ?? 0),
+    }),
+    [
+      inventoryMetrics.criticalItems,
+      inventoryMetrics.criticalPercentage,
+      inventoryMetrics.totalItems,
+    ],
+  );
+
+  const { aiPulse, isRefreshingPulse } = useAiPulse({
+    summary,
+    period,
+    referenceDate,
+    stockRadar,
+    inventoryMetrics: inventorySnapshot,
+    revenueMix,
+    throughput,
+    agendaCount: Array.isArray(agendaData) ? agendaData.length : 0,
+  });
+
+  const assistantContext = useMemo(
+    () => ({
+      summary,
+      period,
+      referenceDate,
+      throughput,
+      revenueMix,
+      stockRadar,
+      inventoryMetrics: inventorySnapshot,
+      agendaCount: Array.isArray(agendaData) ? agendaData.length : 0,
+    }),
+    [
+      summary,
+      period,
+      referenceDate,
+      throughput,
+      revenueMix,
+      stockRadar,
+      inventorySnapshot,
+      agendaData,
+    ],
+  );
+
   if (isLoading) {
     return <DashboardSkeleton />;
   }
@@ -47,7 +96,12 @@ const DashboardPage = () => {
       />
 
       <section className="grid gap-4 sm:gap-6 xl:grid-cols-12">
-        <PulseSection summary={summary} period={period} />
+        <PulseSection
+          summary={summary}
+          period={period}
+          aiPulse={aiPulse}
+          isRefreshingPulse={isRefreshingPulse}
+        />
         <ShiftAgendaCard setClose={setOnClose} agendaData={agendaData} />
       </section>
 
@@ -76,6 +130,8 @@ const DashboardPage = () => {
           totalItems={inventoryMetrics.totalItems}
         />
       </section>
+
+      <AiAssistantDock context={assistantContext} aiPulse={aiPulse} />
     </div>
   );
 };

@@ -13,8 +13,19 @@ const periodLabels = {
   yearly: "This Year",
 };
 
+const pulseToneClasses = {
+  emerald: "bg-emerald-100 text-emerald-700",
+  amber: "bg-amber-100 text-amber-700",
+  rose: "bg-rose-100 text-rose-700",
+};
+
 // Shows top KPI cards using live dashboard summary values.
-const PulseSection = ({ summary, period = "weekly" }) => {
+const PulseSection = ({
+  summary,
+  period = "weekly",
+  aiPulse,
+  isRefreshingPulse = false,
+}) => {
   const safeSummary = summary ?? {};
   const periodLabel = periodLabels[period] ?? "Selected Range";
   const rangeOrders = Number(safeSummary.totalOrders ?? 0);
@@ -65,6 +76,15 @@ const PulseSection = ({ summary, period = "weekly" }) => {
     },
   ];
 
+  const pulseHeadline =
+    aiPulse?.headline ||
+    "AI signal: Print floor is stable with healthy dispatch pace today.";
+  const pulseDescription =
+    aiPulse?.description ||
+    "Maintain current pace and monitor finishing queue to keep same-day delivery on track.";
+  const pulseToneClass =
+    pulseToneClasses[aiPulse?.tone] || pulseToneClasses.emerald;
+
   return (
     <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-linear-to-br from-slate-50 via-white to-sky-50 p-4 sm:rounded-[30px] sm:p-8 xl:col-span-8">
       <div className="absolute -right-16 -top-14 hidden h-52 w-52 rounded-full bg-sky-200/45 blur-3xl sm:block" />
@@ -73,15 +93,22 @@ const PulseSection = ({ summary, period = "weekly" }) => {
       <div className="relative flex flex-col gap-4 sm:gap-8">
         <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-6">
           <div className="max-w-xl">
-            <p className="mb-2 text-xs font-bold uppercase tracking-[0.24em] text-slate-500">
-              Live Pulse
-            </p>
+            <div className="mb-2 flex items-center gap-2">
+              <p className="text-xs font-bold uppercase tracking-[0.24em] text-slate-500">
+                Live Pulse
+              </p>
+              <span
+                className={`rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${pulseToneClass}`}
+              >
+                {isRefreshingPulse ? "AI Syncing" : "AI Live"}
+              </span>
+            </div>
+
             <h2 className="text-lg font-black leading-tight text-slate-900 sm:text-3xl">
-              Print floor is stable with a high dispatch pace today.
+              {pulseHeadline}
             </h2>
-            <p className="mt-2 hidden text-sm text-slate-600 sm:block sm:mt-3">
-              Your bottleneck moved from print to finishing in the last 2 hours.
-              Keep the current order pace to maintain same-day delivery.
+            <p className="mt-2 text-sm text-slate-600 sm:mt-3">
+              {pulseDescription}
             </p>
           </div>
         </div>

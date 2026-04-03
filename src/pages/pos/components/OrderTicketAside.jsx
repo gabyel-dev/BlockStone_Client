@@ -57,10 +57,13 @@ const OrderTicketAside = ({
             orderItems.map((entry) => {
               const effectivePrice = entry.price + entry.customPrice;
               const lineTotal = effectivePrice * entry.qty;
+              const lineId =
+                entry.lineId ||
+                `${entry.id}-${entry.priceOptionId ?? entry.name}`;
 
               return (
                 <MotionDiv
-                  key={entry.id}
+                  key={lineId}
                   {...motionSafe({
                     initial: { opacity: 0, y: 6 },
                     animate: { opacity: 1, y: 0 },
@@ -78,7 +81,7 @@ const OrderTicketAside = ({
                       </p>
                     </div>
                     <button
-                      onClick={() => onRemoveItem(entry.id)}
+                      onClick={() => onRemoveItem(lineId)}
                       className="text-slate-400 transition hover:text-rose-600"
                     >
                       <FiTrash2 size={15} />
@@ -97,7 +100,7 @@ const OrderTicketAside = ({
                         value={entry.customPrice}
                         onChange={(e) =>
                           onCustomPriceChange(
-                            entry.id,
+                            lineId,
                             Number(e.target.value || 0),
                           )
                         }
@@ -118,7 +121,7 @@ const OrderTicketAside = ({
                   <div className="mt-2.5 flex items-center justify-between sm:mt-3">
                     <div className="inline-flex items-center rounded-lg border border-slate-200">
                       <button
-                        onClick={() => onDecreaseQty(entry.id)}
+                        onClick={() => onDecreaseQty(lineId)}
                         className="px-2 py-1 text-slate-600 hover:bg-slate-100"
                       >
                         <FiMinus size={13} />
@@ -127,7 +130,7 @@ const OrderTicketAside = ({
                         {entry.qty}
                       </span>
                       <button
-                        onClick={() => onIncreaseQty(entry.id)}
+                        onClick={() => onIncreaseQty(lineId)}
                         className="px-2 py-1 text-slate-600 hover:bg-slate-100"
                       >
                         <FiPlus size={13} />

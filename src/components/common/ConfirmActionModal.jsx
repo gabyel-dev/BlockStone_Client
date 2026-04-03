@@ -47,7 +47,8 @@ const ConfirmActionModal = ({
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+            
+            className={`rounded-lg px-3 py-2 text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${confirmClass}`}
           >
             Cancel
           </button>
@@ -55,7 +56,7 @@ const ConfirmActionModal = ({
             type="button"
             onClick={onConfirm}
             disabled={isSubmitting}
-            className={`rounded-lg px-3 py-2 text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${confirmClass}`}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? "Processing..." : confirmLabel}
           </button>
