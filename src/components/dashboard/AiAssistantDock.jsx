@@ -274,10 +274,19 @@ const renderAssistantMessage = (content, keyPrefix) => {
   ));
 };
 
+const formatElapsed = (seconds) => {
+  const safeSeconds = Math.max(0, Number(seconds || 0));
+  const mm = Math.floor(safeSeconds / 60);
+  const ss = safeSeconds % 60;
+
+  return `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+};
+
 const AiAssistantDock = ({ context, aiPulse }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
+  const [responseElapsedSec, setResponseElapsedSec] = useState(0);
   const [dockPosition, setDockPosition] = useState(() => readDockPosition());
   const [isDraggingDock, setIsDraggingDock] = useState(false);
   const [messages, setMessages] = useState(() => {
@@ -365,6 +374,23 @@ const AiAssistantDock = ({ context, aiPulse }) => {
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (!isThinking) {
+      setResponseElapsedSec(0);
+      return;
+    }
+
+    const startedAt = Date.now();
+    setResponseElapsedSec(0);
+
+    const timer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      setResponseElapsedSec(elapsed);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isThinking]);
 
   const handleDockToggle = () => {
     if (preventToggleAfterDragRef.current) {
@@ -644,13 +670,21 @@ const AiAssistantDock = ({ context, aiPulse }) => {
 
               {isThinking ? (
                 <article className="max-w-[92%] rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-500 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <FiLoader
-                      className="animate-spin text-slate-500"
-                      size={14}
-                    />
-                    <span className="italic">Analyzing live signals...</span>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <FiLoader
+                        className="animate-spin text-slate-500"
+                        size={14}
+                      />
+                      <span className="italic">Analyzing live signals...</span>
+                    </div>
+                    <span className="rounded bg-slate-100 px-2 py-0.5 font-mono text-[11px] text-slate-600">
+                      {formatElapsed(responseElapsedSec)}
+                    </span>
                   </div>
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    Free tier responses can take around 20-30 seconds.
+                  </p>
                 </article>
               ) : null}
             </div>
