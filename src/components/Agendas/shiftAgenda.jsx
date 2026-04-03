@@ -134,26 +134,18 @@ export default function ShiftAgendaModal({
               </div>
 
               <span className="flex gap-3 pt-4">
-                <MotionButton
-                  whileHover={{ scale: 1.05, rotate: -3 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={resetForm}
-                  className="rounded-full border border-slate-200 bg-white/70 p-2 shadow-sm"
-                  title="New agenda"
-                  type="button"
-                >
-                  <FaPlus className="text-black/70 text-2xl" />
-                </MotionButton>
-                <MotionButton
-                  whileHover={{ scale: 1.05, rotate: 3 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="rounded-full border border-slate-200 bg-white/70 p-2 shadow-sm"
-                  title="Editing mode"
-                  type="button"
-                  disabled
-                >
-                  <FaEdit className="text-black/40 text-2xl" />
-                </MotionButton>
+                {isEditMode && (
+                  <MotionButton
+                    whileHover={{ scale: 1.05, rotate: -3 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={resetForm}
+                    className="rounded-full border border-slate-200 bg-white/70 p-2 shadow-sm"
+                    title="New agenda"
+                    type="button"
+                  >
+                    <FaPlus className="text-black/70 text-2xl" />
+                  </MotionButton>
+                )}
               </span>
             </div>
           </div>

@@ -10,9 +10,6 @@ const ThroughputChartCard = ({ period, throughput }) => {
           <h3 className="text-lg font-black text-slate-900 sm:text-xl">
             {period} Job Output
           </h3>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
-            Timezone: PHT (12-hour)
-          </p>
         </div>
       </div>
 
