@@ -1,4 +1,4 @@
-import { FiArrowRight, FiClock } from "react-icons/fi";
+import { FiArrowRight, FiClock, FiLoader, FiRefreshCw } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
 const toneClasses = {
@@ -9,6 +9,9 @@ const toneClasses = {
 
 const StockRadarCard = ({
   stockRadar,
+  isLoading = false,
+  error = "",
+  onRetry,
   criticalPercentage = 0,
   criticalCount = 0,
   totalItems = 0,
@@ -32,7 +35,28 @@ const StockRadarCard = ({
       </div>
 
       <div className="space-y-2 sm:space-y-3">
-        {stockRadar.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-500">
+            <FiLoader className="animate-spin" size={14} /> Loading inventory...
+          </div>
+        ) : null}
+
+        {!isLoading && error ? (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+            <p>{error}</p>
+            {typeof onRetry === "function" ? (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="mt-2 inline-flex items-center gap-1 rounded-md border border-rose-300 bg-white px-2.5 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
+              >
+                <FiRefreshCw size={12} /> Retry
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
+        {!isLoading && !error && stockRadar.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-200 p-3 text-sm text-slate-500">
             No inventory data yet.
           </div>

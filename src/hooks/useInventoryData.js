@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createInventoryItem,
   deleteInventoryItem,
@@ -11,13 +11,12 @@ import {
   summarizeInventory,
 } from "../utils/inventoryMetrics";
 
-let inFlightLoadPromise = null;
-
 export const useInventoryData = () => {
   const [inventory, setInventory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const inFlightLoadPromiseRef = useRef(null);
 
   const syncInventory = useCallback((rows) => {
     const normalized = normalizeInventoryList(rows);
@@ -27,15 +26,15 @@ export const useInventoryData = () => {
 
   const loadInventory = useCallback(
     async ({ silent = false } = {}) => {
-      if (inFlightLoadPromise) {
-        return inFlightLoadPromise;
+      if (inFlightLoadPromiseRef.current) {
+        return inFlightLoadPromiseRef.current;
       }
 
       if (!silent) {
         setIsLoading(true);
       }
 
-      inFlightLoadPromise = getInventory()
+      inFlightLoadPromiseRef.current = getInventory()
         .then((response) => {
           const rows = response?.data?.data?.inventory ?? [];
           const normalized = syncInventory(rows);
@@ -47,13 +46,13 @@ export const useInventoryData = () => {
           return [];
         })
         .finally(() => {
-          inFlightLoadPromise = null;
+          inFlightLoadPromiseRef.current = null;
           if (!silent) {
             setIsLoading(false);
           }
         });
 
-      return inFlightLoadPromise;
+      return inFlightLoadPromiseRef.current;
     },
     [syncInventory],
   );

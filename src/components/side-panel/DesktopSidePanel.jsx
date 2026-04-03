@@ -50,12 +50,10 @@ const DesktopSidePanel = ({
   }, [isCollapsed, isCollapsedInventoryMenuOpen]);
 
   return (
-    <div className="relative hidden lg:block">
+    <div className="fixed  hidden self-start lg:sticky lg:top-4 lg:block lg:h-[calc(100vh-2rem)]">
       <aside
-        className={`sticky top-6 z-4 mx-5 flex h-fit flex-col justify-between rounded-[30px] border border-slate-200 bg-white shadow-[0_20px_45px_-30px_rgba(15,23,42,0.35)] transition-[width,min-width] duration-200 ${
-          isCollapsed
-            ? "w-24 min-w-24 overflow-visible"
-            : "w-72 min-w-72 overflow-hidden"
+        className={`z-20 sticky mx-5 flex h-full max-h-[calc(100vh-2rem)] min-h-[calc(100vh-2rem)] flex-col justify-between overflow-y-auto rounded-[30px] border border-slate-200 bg-white shadow-[0_20px_45px_-30px_rgba(15,23,42,0.35)] transition-[width,min-width] duration-200 ${
+          isCollapsed ? "w-24 min-w-24 overflow-visible" : "w-72 min-w-72"
         } ${isLoggingOut ? "pointer-events-none" : ""}`}
       >
         <div>

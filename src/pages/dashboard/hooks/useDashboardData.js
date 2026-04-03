@@ -2,11 +2,16 @@ import { useEffect, useState } from "react";
 import { getDashboard } from "../../../api/auth";
 
 // Loads dashboard KPI/chart payload with polling tied to selected period/date.
-export const useDashboardData = ({ period, referenceDate }) => {
+export const useDashboardData = ({
+  period,
+  referenceDate,
+  refreshMs = 15000,
+}) => {
   const [summary, setSummary] = useState({});
   const [throughput, setThroughput] = useState([]);
   const [revenueMix, setRevenueMix] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -48,20 +53,24 @@ export const useDashboardData = ({ period, referenceDate }) => {
 
     loadDashboard();
 
-    refreshTimer = setInterval(() => {
-      loadDashboard({ silent: true });
-    }, 15000);
+    refreshTimer = setInterval(
+      () => {
+        loadDashboard({ silent: true });
+      },
+      Number(refreshMs) || 15000,
+    );
 
     return () => {
       isMounted = false;
       clearInterval(refreshTimer);
     };
-  }, [period, referenceDate]);
+  }, [period, referenceDate, refreshMs, reloadToken]);
 
   return {
     summary,
     throughput,
     revenueMix,
     isLoading,
+    reloadDashboard: () => setReloadToken((value) => value + 1),
   };
 };
