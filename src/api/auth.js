@@ -6,6 +6,8 @@ export const logoutUser = () => api.post("/auth/logout");
 export const refreshSession = () => api.post("/auth/refresh");
 export const getMe = () => api.get("/auth/me");
 export const getUsers = () => api.get("/auth/users");
+export const sendOnlineHeartbeat = () => api.post("/auth/online/heartbeat");
+export const getOnlineUsers = () => api.get("/auth/online-users");
 export const updateUserRole = ({ id, role }) =>
   api.patch(`/auth/users/${id}/role`, { role });
 export const deleteUser = (id) => api.delete(`/auth/users/${id}`);

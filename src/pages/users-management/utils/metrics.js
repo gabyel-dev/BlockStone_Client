@@ -1,22 +1,29 @@
 export const buildUserStats = (users = []) => {
-  const admins = users.filter(
+  const safeUsers = Array.isArray(users) ? users : [];
+
+  const admins = safeUsers.filter(
     (entry) => String(entry?.role || "").toLowerCase() === "admin",
   ).length;
-  const regularUsers = users.filter(
+  const regularUsers = safeUsers.filter(
     (entry) => String(entry?.role || "").toLowerCase() !== "admin",
   ).length;
 
   return {
-    total: users.length,
+    total: safeUsers.length,
     admins,
     users: regularUsers,
   };
 };
 
-export const filterUsers = ({ users = [], roleFilter = "all", searchText = "" }) => {
+export const filterUsers = ({
+  users = [],
+  roleFilter = "all",
+  searchText = "",
+}) => {
+  const safeUsers = Array.isArray(users) ? users : [];
   const query = searchText.trim().toLowerCase();
 
-  return users.filter((entry) => {
+  return safeUsers.filter((entry) => {
     const role = String(entry?.role || "").toLowerCase();
     const isAdmin = role === "admin";
     const roleMatches =

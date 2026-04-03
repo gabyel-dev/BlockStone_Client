@@ -13,7 +13,7 @@ export const useUsersData = () => {
 
       const response = await getUsers();
       const userList = response?.data?.data ?? [];
-      setUsers(userList);
+      setUsers(Array.isArray(userList) ? userList : []);
     } catch {
       setError("Unable to load users. Please refresh and try again.");
       setUsers([]);

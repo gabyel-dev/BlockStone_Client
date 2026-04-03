@@ -86,7 +86,7 @@ const PulseSection = ({ summary, period = "weekly" }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3">
           {stats.map((card, index) => {
             const Icon = card.icon;
             return (

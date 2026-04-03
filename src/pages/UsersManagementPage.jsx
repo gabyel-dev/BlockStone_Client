@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import {
   FiLoader,
   FiLock,
@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { deleteUser, registerUser, updateUserRole } from "../api/auth";
 import ConfirmActionModal from "../components/common/ConfirmActionModal";
 import { useMotionSafe } from "../hooks/useMotionSafe";
+import { useOnlineUsers } from "./users-management/hooks/useOnlineUsers";
 import { useUsersData } from "./users-management/hooks/useUsersData";
 import { buildUserStats, filterUsers } from "./users-management/utils/metrics";
 
@@ -27,11 +28,17 @@ const INITIAL_ADD_USER_FORM = {
 };
 
 const UsersManagementPage = () => {
-  const { user: currentUser } = useOutletContext();
+  const outletContext = useOutletContext() ?? {};
+  const currentUser = outletContext?.user ?? null;
   const location = useLocation();
   const activeMenu = location.state?.menu || "Users Management";
 
   const { users, loading, error, reloadUsers } = useUsersData();
+  const isCurrentUserAdmin =
+    String(currentUser?.role || "").toLowerCase() === "admin";
+  const { isUserOnline, onlineCount } = useOnlineUsers({
+    enabled: isCurrentUserAdmin,
+  });
   const [roleFilter, setRoleFilter] = useState("all");
   const [searchText, setSearchText] = useState("");
   const [confirmState, setConfirmState] = useState(null);
@@ -148,7 +155,7 @@ const UsersManagementPage = () => {
   }, [users, roleFilter, searchText]);
 
   return (
-    <motion.main
+    <Motion.main
       className="w-full py-7 text-slate-900 pr-6 pl-6 md:pl-0"
       {...motionSafe({
         initial: { opacity: 0, y: 8 },
@@ -167,7 +174,7 @@ const UsersManagementPage = () => {
       </header>
 
       <section className="grid gap-6 xl:grid-cols-12">
-        <motion.div
+        <Motion.div
           className="relative overflow-hidden rounded-[30px] border border-slate-200 bg-linear-to-br from-slate-50 via-white to-sky-50 p-6 xl:col-span-8"
           {...motionSafe({
             initial: { opacity: 0, y: 10 },
@@ -186,7 +193,7 @@ const UsersManagementPage = () => {
             </h2>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <motion.div
+              <Motion.div
                 {...motionSafe({
                   initial: { opacity: 0, y: 6 },
                   animate: { opacity: 1, y: 0 },
@@ -200,8 +207,8 @@ const UsersManagementPage = () => {
                 <p className="mt-2 text-2xl font-black text-slate-900">
                   {stats.total}
                 </p>
-              </motion.div>
-              <motion.div
+              </Motion.div>
+              <Motion.div
                 {...motionSafe({
                   initial: { opacity: 0, y: 6 },
                   animate: { opacity: 1, y: 0 },
@@ -215,8 +222,8 @@ const UsersManagementPage = () => {
                 <p className="mt-2 text-2xl font-black text-indigo-700">
                   {stats.admins}
                 </p>
-              </motion.div>
-              <motion.div
+              </Motion.div>
+              <Motion.div
                 {...motionSafe({
                   initial: { opacity: 0, y: 6 },
                   animate: { opacity: 1, y: 0 },
@@ -230,12 +237,12 @@ const UsersManagementPage = () => {
                 <p className="mt-2 text-2xl font-black text-emerald-700">
                   {stats.users}
                 </p>
-              </motion.div>
+              </Motion.div>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
 
-        <motion.aside
+        <Motion.aside
           className="rounded-[30px] border border-slate-200 bg-white p-6 xl:col-span-4"
           {...motionSafe({
             initial: { opacity: 0, y: 10 },
@@ -289,7 +296,7 @@ const UsersManagementPage = () => {
               </button>
             </div>
           </div>
-        </motion.aside>
+        </Motion.aside>
       </section>
 
       <section className="mt-6 rounded-[30px] border border-slate-200 bg-white p-6">
@@ -325,12 +332,13 @@ const UsersManagementPage = () => {
                 No users matched your filter and search.
               </div>
             ) : (
-              filteredUsers.map((entry) => {
+              filteredUsers.filter(Boolean).map((entry) => {
                 const isAdmin =
                   String(entry?.role || "").toLowerCase() === "admin";
+                const online = isUserOnline(entry.id);
 
                 return (
-                  <motion.div
+                  <Motion.div
                     key={entry.id}
                     {...motionSafe({
                       initial: { opacity: 0, y: 6 },
@@ -358,6 +366,16 @@ const UsersManagementPage = () => {
                     </div>
 
                     <div className="flex  items-end justify-end w-full gap-2">
+                      <span
+                        className={`rounded-lg px-2 py-1 text-xs font-bold uppercase tracking-[0.12em] ${
+                          online
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {online ? "Online" : "Offline"}
+                      </span>
+
                       <span
                         className={`rounded-lg px-2 py-1 text-xs font-bold uppercase tracking-[0.12em] ${
                           isAdmin
@@ -404,7 +422,7 @@ const UsersManagementPage = () => {
                         </button>
                       </div>
                     </div>
-                  </motion.div>
+                  </Motion.div>
                 );
               })
             )}
@@ -412,7 +430,7 @@ const UsersManagementPage = () => {
         )}
       </section>
 
-      <section className="mt-6 rounded-[30px] border border-slate-200 bg-linear-to-r from-slate-900 to-slate-800 p-6 text-white">
+      <section className="mt-6 rounded-[30px] border border-slate-200 bg-slate-900 bg-linear-to-r from-slate-900 to-slate-800 p-6 text-white">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
@@ -422,6 +440,7 @@ const UsersManagementPage = () => {
           </div>
           <div className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-white">
             <FiUsers size={16} /> {filteredUsers.length} members displayed
+            {isCurrentUserAdmin ? ` · ${onlineCount} online` : ""}
           </div>
         </div>
       </section>
@@ -449,7 +468,7 @@ const UsersManagementPage = () => {
 
       {isAddUserOpen ? (
         <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/50 p-4">
-          <motion.div
+          <Motion.div
             className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"
             {...motionSafe({
               initial: { opacity: 0, y: 10 },
@@ -585,7 +604,7 @@ const UsersManagementPage = () => {
                 </button>
               </div>
             </form>
-          </motion.div>
+          </Motion.div>
         </div>
       ) : null}
 
@@ -597,7 +616,7 @@ const UsersManagementPage = () => {
       >
         <FiPlus size={20} />
       </button>
-    </motion.main>
+    </Motion.main>
   );
 };
 
