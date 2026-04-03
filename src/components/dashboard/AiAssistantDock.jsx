@@ -628,7 +628,7 @@ const AiAssistantDock = ({ context, aiPulse }) => {
                   key={message.id}
                   className={`max-w-[92%] rounded-2xl px-3 py-2.5 text-sm leading-relaxed shadow-sm ${
                     message.role === "assistant"
-                      ? "border border-amber-200 bg-gradient-to-br from-white via-amber-50/40 to-white text-slate-700"
+                      ? "border border-amber-200 bg-linear-to-br from-white via-amber-50/40 to-white text-slate-700"
                       : "ml-auto bg-slate-900 text-white"
                   }`}
                 >
