@@ -18,6 +18,7 @@ import { useShiftAgendaData } from "./dashboard/hooks/useShiftAgendaData";
 // Main dashboard page that loads analytics and passes data into UI cards.
 const DashboardPage = () => {
   const { user } = useOutletContext();
+  const canUseAi = String(user?.role || "").toLowerCase() === "admin";
 
   // Selected filter values for dashboard analytics.
   const [period, setPeriod] = useState("daily");
@@ -48,6 +49,7 @@ const DashboardPage = () => {
   );
 
   const { aiPulse, isRefreshingPulse } = useAiPulse({
+    enabled: canUseAi,
     summary,
     period,
     referenceDate,
@@ -131,7 +133,9 @@ const DashboardPage = () => {
         />
       </section>
 
-      <AiAssistantDock context={assistantContext} aiPulse={aiPulse} />
+      {canUseAi ? (
+        <AiAssistantDock context={assistantContext} aiPulse={aiPulse} />
+      ) : null}
     </div>
   );
 };

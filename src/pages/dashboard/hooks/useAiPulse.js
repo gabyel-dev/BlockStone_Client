@@ -38,6 +38,7 @@ const buildPulsePrompt = ({ period, referenceDate }) =>
   ].join(" ");
 
 export const useAiPulse = ({
+  enabled = true,
   summary,
   period,
   referenceDate,
@@ -81,6 +82,12 @@ export const useAiPulse = ({
   };
 
   useEffect(() => {
+    if (!enabled) {
+      setAiPulse(fallbackPulse);
+      setIsRefreshingPulse(false);
+      return;
+    }
+
     let isMounted = true;
 
     const refreshPulse = async () => {
@@ -142,7 +149,7 @@ export const useAiPulse = ({
       isMounted = false;
       clearInterval(timer);
     };
-  }, [period, referenceDate]);
+  }, [enabled, fallbackPulse, period, referenceDate]);
 
   return {
     aiPulse,
