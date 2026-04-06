@@ -14,9 +14,15 @@ import {
 } from "react-icons/fi";
 import { askAiAssistant } from "../../api/ai";
 import { getDashboard } from "../../api/auth";
+import { getInventory } from "../../api/inventory";
+import {
+  mapInventoryToRadar,
+  summarizeInventory,
+} from "../../utils/inventoryMetrics";
 import { getTodayDateValue } from "../../utils/timezoneDate";
 import { readUserSettings } from "../../utils/userSettings";
 import {
+  buildAiPulse,
   createAssistantReply,
   getAssistantRecommendations,
 } from "../../utils/dashboardAssistant";
@@ -309,7 +315,17 @@ const AiAssistantDock = ({ context, aiPulse, user }) => {
   );
   const [fallbackContext, setFallbackContext] = useState(() => ({
     summary: {},
+    throughput: [],
+    orderFlow: [],
+    revenueMix: [],
     stockRadar: [],
+    inventoryMetrics: {
+      criticalCount: 0,
+      criticalPercentage: 0,
+      totalItems: 0,
+    },
+    period: "daily",
+    referenceDate: getTodayDateValue(),
   }));
   const [messages, setMessages] = useState(() => {
     const cached = readCachedMessages();
@@ -348,20 +364,43 @@ const AiAssistantDock = ({ context, aiPulse, user }) => {
 
     const hasSummary =
       context.summary && Object.keys(context.summary || {}).length > 0;
+    const hasThroughput =
+      Array.isArray(context.throughput) && context.throughput.length > 0;
+    const hasRevenueMix =
+      Array.isArray(context.revenueMix) && context.revenueMix.length > 0;
     const hasRadar =
       Array.isArray(context.stockRadar) && context.stockRadar.length > 0;
 
-    return hasSummary || hasRadar;
+    return hasSummary || hasRadar || hasThroughput || hasRevenueMix;
   }, [context]);
   const resolvedContext = hasLiveContext ? context : fallbackContext;
-  const safeAiPulse =
-    aiPulse && aiPulse.headline && aiPulse.description
-      ? aiPulse
-      : {
-          tone: "amber",
-          headline: "AI pulse is warming up.",
-          description: "Open Dashboard for richer live operational signals.",
-        };
+  const safeAiPulse = useMemo(() => {
+    if (aiPulse && aiPulse.headline && aiPulse.description) {
+      return aiPulse;
+    }
+
+    const generated = buildAiPulse({
+      summary: resolvedContext?.summary,
+      period: resolvedContext?.period || "daily",
+      stockRadar: resolvedContext?.stockRadar,
+      criticalCount: Number(
+        resolvedContext?.inventoryMetrics?.criticalCount ??
+          resolvedContext?.inventoryMetrics?.criticalItems ??
+          0,
+      ),
+      revenueMix: resolvedContext?.revenueMix,
+    });
+
+    if (generated?.headline && generated?.description) {
+      return generated;
+    }
+
+    return {
+      tone: "amber",
+      headline: "AI pulse is warming up.",
+      description: "Open Dashboard for richer live operational signals.",
+    };
+  }, [aiPulse, resolvedContext]);
   const recommendations = useMemo(() => {
     const items = getAssistantRecommendations();
     return items.slice(0, Math.max(0, items.length - 2));
@@ -407,6 +446,34 @@ const AiAssistantDock = ({ context, aiPulse, user }) => {
         icon: FiCheckCircle,
         title: "AI Pulse",
         description: String(safeAiPulse.headline),
+      });
+    }
+
+    const latestThroughput = Array.isArray(resolvedContext?.throughput)
+      ? resolvedContext.throughput[resolvedContext.throughput.length - 1]
+      : null;
+    if (latestThroughput) {
+      rows.push({
+        id: "throughput-latest",
+        tone: "info",
+        icon: FiClock,
+        title: `${Number(latestThroughput.jobs ?? 0)} jobs processed`,
+        description: `Latest throughput bucket: ${latestThroughput.day || "current period"}.`,
+      });
+    }
+
+    const topRevenueCategory = Array.isArray(resolvedContext?.revenueMix)
+      ? [...resolvedContext.revenueMix].sort(
+          (left, right) => Number(right?.value ?? 0) - Number(left?.value ?? 0),
+        )[0]
+      : null;
+    if (topRevenueCategory?.label) {
+      rows.push({
+        id: "top-category",
+        tone: "info",
+        icon: FiCheckCircle,
+        title: `Top category: ${topRevenueCategory.label}`,
+        description: `Revenue contribution: ${Number(topRevenueCategory.value ?? 0).toFixed(2)}.`,
       });
     }
 
@@ -536,22 +603,42 @@ const AiAssistantDock = ({ context, aiPulse, user }) => {
     const loadFallbackContext = async () => {
       try {
         const todayDate = getTodayDateValue();
-        const response = await getDashboard({
-          period: "daily",
-          date: todayDate,
-        });
+        const [dashboardResponse, inventoryResponse] = await Promise.all([
+          getDashboard({
+            period: "daily",
+            date: todayDate,
+          }),
+          getInventory(),
+        ]);
 
         if (!isMounted) {
           return;
         }
 
-        const payload = response?.data?.data ?? {};
+        const payload = dashboardResponse?.data?.data ?? {};
+        const inventoryRows = inventoryResponse?.data?.data?.inventory ?? [];
+        const stockRadar = mapInventoryToRadar(inventoryRows);
+        const inventorySummary = summarizeInventory(inventoryRows);
 
         setFallbackContext({
           summary: payload.summary ?? {},
-          stockRadar: Array.isArray(payload.stockRadar)
-            ? payload.stockRadar
+          throughput: Array.isArray(payload.throughput)
+            ? payload.throughput
             : [],
+          orderFlow: Array.isArray(payload.orderFlow) ? payload.orderFlow : [],
+          revenueMix: Array.isArray(payload.revenueMix)
+            ? payload.revenueMix
+            : [],
+          stockRadar,
+          inventoryMetrics: {
+            criticalCount: Number(inventorySummary.criticalItems ?? 0),
+            criticalPercentage: Number(
+              inventorySummary.criticalPercentage ?? 0,
+            ),
+            totalItems: Number(inventorySummary.totalItems ?? 0),
+          },
+          period: "daily",
+          referenceDate: todayDate,
         });
       } catch {
         if (!isMounted) {
