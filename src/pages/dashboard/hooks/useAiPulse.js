@@ -43,8 +43,37 @@ const buildPulsePrompt = ({ period, referenceDate }) =>
     "No markdown. No code fences. No extra keys.",
   ].join(" ");
 
-const makeCacheKey = ({ period, referenceDate }) =>
-  `${String(period || "daily")}:${String(referenceDate || "")}`;
+const makeCacheKey = ({ period, referenceDate, summary }) => {
+  const totalOrders = Number(summary?.totalOrders ?? 0);
+  const totalRevenue = Number(summary?.totalRevenue ?? 0);
+
+  return `${String(period || "daily")}:${String(referenceDate || "")}:${totalOrders}:${totalRevenue}`;
+};
+
+const hasNoOrdersLanguage = (pulse) => {
+  const text = `${pulse?.headline || ""} ${pulse?.description || ""}`
+    .trim()
+    .toLowerCase();
+
+  return (
+    text.includes("no completed orders") ||
+    text.includes("no orders") ||
+    text.includes("zero orders")
+  );
+};
+
+const isPulseConsistentWithSummary = (pulse, summary) => {
+  if (!pulse || !summary) {
+    return true;
+  }
+
+  const totalOrders = Number(summary?.totalOrders ?? 0);
+  if (totalOrders > 0 && hasNoOrdersLanguage(pulse)) {
+    return false;
+  }
+
+  return true;
+};
 
 const readPulseCache = (cacheKey) => {
   if (typeof window === "undefined") {
@@ -125,8 +154,8 @@ export const useAiPulse = ({
   const latestContextRef = useRef(null);
   const blockedUntilRef = useRef(0);
   const cacheKey = useMemo(
-    () => makeCacheKey({ period, referenceDate }),
-    [period, referenceDate],
+    () => makeCacheKey({ period, referenceDate, summary }),
+    [period, referenceDate, summary],
   );
 
   latestContextRef.current = {
@@ -149,11 +178,11 @@ export const useAiPulse = ({
     }
 
     const cachedPulse = readPulseCache(cacheKey);
-    if (cachedPulse) {
+    if (cachedPulse && isPulseConsistentWithSummary(cachedPulse, summary)) {
       setAiPulse(cachedPulse);
+    } else {
+      setAiPulse(fallbackPulse);
     }
-
-    setAiPulse((current) => current || fallbackPulse);
 
     let isMounted = true;
     let initialTimer;
@@ -184,10 +213,14 @@ export const useAiPulse = ({
 
         const text = extractText(response?.data);
         const parsed = parseAiPulseFromText(text);
+        const safePulse =
+          parsed && isPulseConsistentWithSummary(parsed, context.summary)
+            ? parsed
+            : context.fallbackPulse;
 
-        if (isMounted && parsed) {
-          setAiPulse(parsed);
-          writePulseCache(cacheKey, parsed);
+        if (isMounted && safePulse) {
+          setAiPulse(safePulse);
+          writePulseCache(cacheKey, safePulse);
         }
       } catch (error) {
         const providerCode = error?.response?.data?.code;

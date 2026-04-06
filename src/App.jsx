@@ -10,10 +10,12 @@ import InventoryPage from "./pages/InventoryPage";
 import SettingsPage from "./pages/SettingsPage";
 import MainLayout from "./pages/MainLayout";
 import { GuestOnly, RequireAuth } from "./context/authContext";
+import SeoManager from "./components/common/SeoManager";
 
 const App = () => {
   return (
     <BrowserRouter>
+      <SeoManager />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route

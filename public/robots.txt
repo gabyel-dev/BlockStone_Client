@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /pos
+Disallow: /sales
+Disallow: /inventory
+Disallow: /users
+Disallow: /settings
+
+Sitemap: https://blockstone-prints.vercel.app/sitemap.xml
